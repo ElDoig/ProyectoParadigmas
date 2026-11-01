@@ -1,0 +1,9 @@
+id,nombre,tipo,distrito
+P01,Planta de abastecimiento,planta,Comas
+P02,Colegio de Comas,destino,Comas
+P03,Mercado de Carabayllo,destino,Carabayllo
+P04,Asentamiento humano,destino,Carabayllo
+P05,Colegio de Carabayllo,destino,Carabayllo
+P06,Mercado de Comas,destino,Comas
+P07,Asentamiento de Comas,destino,Comas
+P08,Asentamiento de Carabayllo,destino,Carabayllo

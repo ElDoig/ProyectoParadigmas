@@ -1,0 +1,6 @@
+* text=auto
+*.md text eol=lf
+*.cpp text eol=lf
+*.hs text eol=lf
+*.pl text eol=lf
+*.csv text eol=lf

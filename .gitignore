@@ -1,0 +1,15 @@
+# Datos locales y resultados de ejecución (se conservan los ejemplos).
+/data/runtime/*
+!/data/runtime/.gitkeep
+/build/
+*.exe
+*.o
+*.obj
+*.hi
+*.dyn_hi
+*.dyn_o
+*.pdb
+*.ilk
+*.swp
+.DS_Store
+Thumbs.db
