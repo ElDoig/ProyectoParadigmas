@@ -2,9 +2,9 @@
 
 Proyecto del curso Paradigmas de Programación. Modela una red simplificada de Comas y Carabayllo para distribuir agua desde una planta a colegios, mercados y asentamientos humanos. Los lugares, distancias y tiempos de los CSV son datos de prueba, no rutas verificadas para operar un servicio real.
 
-## Estado: Sprint 0
+## Estado: base inicial y tipos compartidos de Carlos
 
-Esta entrega prepara la estructura para trabajar entre cuatro personas. C++ muestra un menú y permite salir; Haskell imprime un mensaje de inicio; Prolog tiene un punto de carga. Los archivos de cada integrante contienen TODO, sin implementaciones simuladas.
+Esta entrega prepara la estructura para trabajar entre cuatro personas. C++ muestra un menú y permite salir; Haskell imprime un mensaje de inicio; Prolog tiene un punto de carga. Carlos ya definió las estructuras compartidas C++ en `cpp/tipos.h` y los tipos Haskell de 4.2.2 en `haskell/Carlos.hs`. Su uso y las decisiones de integración están en [TIPOS_COMPARTIDOS.md](docs/TIPOS_COMPARTIDOS.md). Los demás trabajos siguen señalados con TODO.
 
 Quedan pendientes todos los registros, lecturas y escrituras CSV, validaciones de negocio, consultas, algoritmos, reportes y adicionales. El menú completo 4.1.1 también está pendiente. Tener CSV de ejemplo no significa que los programas ya los procesen.
 
@@ -22,7 +22,7 @@ No se necesitan frameworks, bases de datos, Docker ni paquetes externos para los
 
 ```text
 ProyectoParadigmas/
-  cpp/             main.cpp, carlos.cpp, nicolas.cpp, valentino.cpp, diego.cpp
+  cpp/             tipos.h, main.cpp, carlos.cpp, nicolas.cpp, valentino.cpp, diego.cpp
   haskell/         Main.hs, Carlos.hs, Nicolas.hs, Valentino.hs, Diego.hs
   prolog/          main.pl, carlos.pl, nicolas.pl, valentino.pl, diego.pl
   data/
@@ -31,13 +31,14 @@ ProyectoParadigmas/
   docs/
     ARQUITECTURA.md
     CONTRATO_CSV.md
+    TIPOS_COMPARTIDOS.md
     VERIFICACION.md
   .gitattributes
   .gitignore
   README.md
 ```
 
-Los tres `main` son los puntos de entrada e integración. Los otros cuatro archivos de cada lenguaje reservan el trabajo de cada integrante; no hace falta crear una carpeta por funcionalidad. En Haskell y Prolog, el punto de entrada ya carga los módulos vacíos. Los archivos C++ de integrantes se incluyen en la compilación.
+Los tres `main` son los puntos de entrada e integración. Los otros cuatro archivos de cada lenguaje reservan el trabajo de cada integrante; no hace falta crear una carpeta por funcionalidad. En Haskell y Prolog, el punto de entrada ya carga los módulos; `Carlos.hs` exporta los tipos compartidos. Los archivos C++ de integrantes se incluyen en la compilación y pueden incluir `tipos.h` para usar las mismas estructuras.
 
 `data/examples/` contiene `puntos.csv`, `conexiones.csv`, `unidades.csv`, `pedidos.csv`, `stock_agua.csv`, `horarios_recepcion.csv`, `dimensiones_cisternas.csv` y `restricciones_altura.csv`. Sus columnas están en [el contrato CSV](docs/CONTRATO_CSV.md). `.gitkeep` conserva la carpeta vacía; `.gitignore` excluye datos locales y compilados; `.gitattributes` normaliza saltos de línea para colaborar desde Windows.
 

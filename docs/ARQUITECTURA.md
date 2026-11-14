@@ -25,7 +25,7 @@ El diagrama describe la integración futura. En este sprint los puntos de entrad
 
 Un archivo por integrante y lenguaje permite comenzar en paralelo. Las funciones y predicados reales se exportarán cuando se acuerden sus firmas. No se crean interfaces especulativas, funciones que devuelvan resultados inventados, ni tipos de negocio vacíos para aparentar avance.
 
-La carga de módulos Haskell y Prolog está preparada. En C++ se compilan los cinco `.cpp`; los archivos de integrantes todavía solo tienen comentarios. Cuando se necesiten declaraciones compartidas, el equipo puede añadir un encabezado sencillo, acordando previamente nombres y tipos. No hace falta una jerarquía de clases.
+La carga de módulos Haskell y Prolog está preparada. En C++ se compilan los cinco `.cpp`; `cpp/tipos.h` define las estructuras compartidas de los cuatro CSV base. `haskell/Carlos.hs` implementa los tipos de 4.2.2. El uso y la correspondencia de campos se documentan en `TIPOS_COMPARTIDOS.md`. Las demás funcionalidades siguen pendientes. No hace falta una jerarquía de clases.
 
 ## Puntos de coordinación
 
@@ -48,13 +48,13 @@ La carga de módulos Haskell y Prolog está preparada. En C++ se compilan los ci
 
 ## Decisiones que el equipo debe cerrar
 
-1. Firmas y tipos comunes de C++, exportaciones Haskell y nombres/argumentos de los hechos Prolog. Mantener los identificadores CSV sin cambiar mayúsculas ni perder ceros.
+1. Usar las estructuras de `cpp/tipos.h` y los tipos exportados por `haskell/Carlos.hs`; acordar las firmas de funciones C++ y los nombres/argumentos de los hechos Prolog. Mantener los identificadores CSV sin cambiar mayúsculas ni perder ceros.
 2. Orden del trabajo y primer PR de tipos/lectores para que los demás puedan consumirlos. Los responsables siguen siendo los del Anexo A.
 3. Mecanismo sencillo para guardar cambios coherentes entre pedidos, unidades y stock: qué ocurre si falla uno de los archivos y cómo recuperar. No permitir lecturas durante una actualización parcial; no hay transacciones implementadas.
 4. Política de errores: archivos ausentes, cabeceras incorrectas, referencias inválidas y errores numéricos. Evitar saltar filas silenciosamente o interpretar un fallo como una lista vacía válida.
 5. Cómo presentar consultas y resultados entre programas: ejecución manual inicial o invocación posterior desde el menú. No hace falta decidirlo con un orquestador en Sprint 0.
 6. Política de litros fraccionarios, redondeo de costos y desempates de rutas/prioridades. El contrato inicial usa litros enteros y soles decimales; cualquier ampliación se revisará entre los tres lenguajes.
 7. Comportamiento si faltan horarios o la dimensión de una unidad. La ausencia de límite de una vía sí está definida en la propuesta; la ausencia de altura de una cisterna no debe interpretarse como altura cero.
-8. Validar las convenciones iniciales de `tipo`, `distrito` y conservación de la unidad en pedidos entregados. Son decisiones del scaffold, no nuevos requisitos del curso.
+8. El contrato ya adopta `tipo` y `zona` de los CSV de prueba actuales; conservar la unidad en pedidos entregados para el historial. Antes de integrar stock, corregir coordinadamente la diferencia entre los 4000 litros reservados del ejemplo y los 12000 litros de pedidos asignados.
 
 No se agregan todavía pruebas de algoritmos inexistentes. Al implementar cada funcionalidad, acompañarla de ejemplos de entrada, resultado esperado y comprobaciones de sus errores relevantes.
