@@ -1,14 +1,6 @@
-module Carlos
-    ( EstadoConexion (..)
-    , EstadoUnidad (..)
-    , Prioridad (..)
-    , EstadoPedido (..)
-    , Conexion (..)
-    , Unidad (..)
-    , Pedido (..)
-    ) where
-
-import Data.Int (Int64)
+-- Esto permite que los otros archivos usen nuestros tipos y funciones
+-- con import Carlos, sin tener que copiarlos.
+module Carlos where
 
 -- 4.2.2 - Carlos Doig: tipos compartidos segun docs/CONTRATO_CSV.md.
 -- Los constructores usan mayusculas por sintaxis Haskell. Show sirve
@@ -26,33 +18,71 @@ data Prioridad = Alta | Media | Baja
 data EstadoPedido = Pendiente | Asignado | Entregado
     deriving (Eq, Show)
 
--- Los prefijos de los selectores evitan nombres duplicados entre records.
+-- Constructores normales, como data Figura en los apuntes de Semana 04.
 -- El orden de campos coincide con el orden de columnas del contrato.
-data Conexion = Conexion
-    { conexionOrigen :: String
-    , conexionDestino :: String
-    , conexionDistanciaKm :: Double
-    , conexionTiempoMin :: Int64
-    , conexionEstado :: EstadoConexion
-    } deriving (Eq, Show)
+-- Conexion: origen, destino, distancia_km, tiempo_min, estado.
+data Conexion = Conexion String String Double Int EstadoConexion
+    deriving (Eq, Show)
 
-data Unidad = Unidad
-    { unidadCodigo :: String
-    , unidadTipo :: String
-    , unidadCapacidadLitros :: Int64
-    , unidadCostoKm :: Double
-    , unidadEstado :: EstadoUnidad
-    } deriving (Eq, Show)
+-- Unidad: codigo, tipo, capacidad_litros, costo_km, estado.
+data Unidad = Unidad String String Int Double EstadoUnidad
+    deriving (Eq, Show)
 
-data Pedido = Pedido
-    { pedidoCodigo :: String
-    , pedidoOrigen :: String
-    , pedidoDestino :: String
-    , pedidoLitros :: Int64
-    , pedidoPrioridad :: Prioridad
-    , pedidoEstado :: EstadoPedido
-    , pedidoUnidad :: Maybe String
-    } deriving (Eq, Show)
+-- Pedido: codigo, origen, destino, litros, prioridad, estado, unidad.
+data Pedido = Pedido String String String Int Prioridad EstadoPedido String
+    deriving (Eq, Show)
 
--- Nothing representa el campo CSV vacio; Just conserva el ID de la unidad.
+-- Acceso a campos mediante pattern matching (Semanas 04 y 05).
+conexionOrigen :: Conexion -> String
+conexionOrigen (Conexion origen _ _ _ _) = origen
+
+conexionDestino :: Conexion -> String
+conexionDestino (Conexion _ destino _ _ _) = destino
+
+conexionDistanciaKm :: Conexion -> Double
+conexionDistanciaKm (Conexion _ _ distancia _ _) = distancia
+
+conexionTiempoMin :: Conexion -> Int
+conexionTiempoMin (Conexion _ _ _ tiempo _) = tiempo
+
+conexionEstado :: Conexion -> EstadoConexion
+conexionEstado (Conexion _ _ _ _ estado) = estado
+
+unidadCodigo :: Unidad -> String
+unidadCodigo (Unidad codigo _ _ _ _) = codigo
+
+unidadTipo :: Unidad -> String
+unidadTipo (Unidad _ tipo _ _ _) = tipo
+
+unidadCapacidadLitros :: Unidad -> Int
+unidadCapacidadLitros (Unidad _ _ capacidad _ _) = capacidad
+
+unidadCostoKm :: Unidad -> Double
+unidadCostoKm (Unidad _ _ _ costo _) = costo
+
+unidadEstado :: Unidad -> EstadoUnidad
+unidadEstado (Unidad _ _ _ _ estado) = estado
+
+pedidoCodigo :: Pedido -> String
+pedidoCodigo (Pedido codigo _ _ _ _ _ _) = codigo
+
+pedidoOrigen :: Pedido -> String
+pedidoOrigen (Pedido _ origen _ _ _ _ _) = origen
+
+pedidoDestino :: Pedido -> String
+pedidoDestino (Pedido _ _ destino _ _ _ _) = destino
+
+pedidoLitros :: Pedido -> Int
+pedidoLitros (Pedido _ _ _ litros _ _ _) = litros
+
+pedidoPrioridad :: Pedido -> Prioridad
+pedidoPrioridad (Pedido _ _ _ _ prioridad _ _) = prioridad
+
+pedidoEstado :: Pedido -> EstadoPedido
+pedidoEstado (Pedido _ _ _ _ _ estado _) = estado
+
+pedidoUnidad :: Pedido -> String
+pedidoUnidad (Pedido _ _ _ _ _ _ unidad) = unidad
+
+-- "" representa el campo CSV vacio; otro texto conserva el codigo de unidad.
 -- Las validaciones y conversiones CSV se implementaran en sus modulos.

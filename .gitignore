@@ -13,3 +13,15 @@
 *.swp
 .DS_Store
 Thumbs.db
+
+# Instrucciones y configuracion local de asistentes de IA.
+/AGENTS.md
+/.agents/
+/.codex/
+/.cursor/
+/CLAUDE.md
+/.cursorrules
+/.github/copilot-instructions.md
+
+# Documentacion privada del grupo (el README sigue siendo publico).
+/docs/
