@@ -6,7 +6,7 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 
 - C++: menú inicial con salida y funciones de registro en memoria de puntos, conexiones, cisternas y pedidos (4.1.3 de Carlos).
 - Haskell: tipos de conexiones, unidades y pedidos (4.2.2 de Carlos), más un punto de entrada mínimo.
-- Prolog: archivos iniciales; consultas de negocio pendientes.
+- Prolog: regla de Carlos para evaluar atencion por disponibilidad y capacidad (4.3.5), usando listas recibidas como argumentos. Lectura CSV y demas reglas pendientes.
 - La captura de registros desde el menú, la carga y el guardado CSV, los cálculos, la gestión de estados y los adicionales siguen pendientes. Los registros de esta etapa se prueban llamando a las funciones; todavía no se ingresan por consola ni se conservan al cerrar el programa.
 
 ## Archivos
@@ -20,10 +20,11 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 | `haskell/Main.hs` | Punto de entrada de Haskell. |
 | `haskell/Carlos.hs` | Tipos y funciones de acceso a sus campos. |
 | `haskell/Nicolas.hs`, `haskell/Valentino.hs`, `haskell/Diego.hs` | Archivos de los demás integrantes. |
-| `prolog/main.pl` y archivos por integrante | Punto de carga y futuros predicados. |
+| `prolog/main.pl` y archivos por integrante | Punto de carga y predicados; `carlos.pl` define `puede_atender/4`. |
 | `data/examples/` | Ocho CSV de prueba versionados. |
 | `data/runtime/` | Datos locales de ejecución, ignorados por Git. |
 | `tests/registro_carlos.cpp` | Pruebas de las funciones de registro. |
+| `tests/atencion_carlos.pl` | Datos aislados y pruebas de la regla de atencion. |
 
 ## Preparar Windows
 
@@ -110,7 +111,40 @@ Para salir del intérprete, escribir `halt.`. Para cargar y salir directamente:
 swipl -q -s prolog/main.pl -g halt
 ```
 
-Todavía no existen las reglas de negocio: los ejemplos de consultas funcionales se añadirán al implementarlas. No se ha podido verificar la carga porque no se encontró SWI-Prolog en el entorno de trabajo.
+La regla actual es `puede_atender(CodigoUnidad, CodigoPedido, Unidades, Pedidos)`. Busca la unidad y el pedido dentro de las listas, exige que la unidad este disponible y comprueba que su capacidad alcance, incluida la igualdad. No asigna pedidos ni modifica datos. Las listas deben contener registros validos con capacidad y litros enteros positivos.
+
+Los terminos `unidad` y `pedido` conservan el orden de los campos CSV, indicado en los comentarios de `carlos.pl`. Para probar con los datos aislados del archivo de pruebas, abrir:
+
+```powershell
+swipl -q -s tests/atencion_carlos.pl
+```
+
+Luego ejecutar en el interprete:
+
+```prolog
+?- pruebas_atencion.
+% Esperado: true.
+
+?- datos_atencion(Unidades, Pedidos), puede_atender(grande, normal, Unidades, Pedidos).
+% Esperado: true; capacidad suficiente.
+
+?- datos_atencion(Unidades, Pedidos), puede_atender(justa, normal, Unidades, Pedidos).
+% Esperado: true; capacidad exactamente igual.
+
+?- datos_atencion(Unidades, Pedidos), puede_atender(pequena, normal, Unidades, Pedidos).
+% Esperado: false; capacidad insuficiente.
+
+?- datos_atencion(Unidades, Pedidos), puede_atender(ocupada, normal, Unidades, Pedidos).
+% Esperado: false; unidad ocupada.
+```
+
+Si el interprete pide elegir otra solucion, pulsar Enter para terminar esa consulta. La prueba completa tambien comprueba pedidos demasiado grandes, codigos inexistentes y listas vacias. Para ejecutarla sin interaccion:
+
+```powershell
+swipl -q -s tests/atencion_carlos.pl -g pruebas_atencion -t halt
+```
+
+La lectura CSV de 4.3.1 sigue pendiente. Por decision del equipo, esta version recibe las listas explicitamente y no usa una base de hechos dinamica. La forma de dos argumentos del enunciado quedara para la integracion con la lectura de datos; no esta implementada todavia. No se ha podido ejecutar Prolog en el entorno de trabajo porque no se encontro SWI-Prolog: los resultados anteriores son los esperados, no resultados medidos.
 
 ## CSV de prueba y ejecución
 
