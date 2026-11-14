@@ -1,9 +1,11 @@
-id,nombre,tipo,distrito
-P01,Planta de abastecimiento,planta,Comas
-P02,Colegio de Comas,destino,Comas
-P03,Mercado de Carabayllo,destino,Carabayllo
-P04,Asentamiento humano,destino,Carabayllo
-P05,Colegio de Carabayllo,destino,Carabayllo
-P06,Mercado de Comas,destino,Comas
-P07,Asentamiento de Comas,destino,Comas
-P08,Asentamiento de Carabayllo,destino,Carabayllo
+codigo,nombre,tipo,zona
+P01,Planta de Abastecimiento Chillon,planta,carabayllo
+P02,IE Comas Norte,colegio,comas
+P03,AAHH Collique,asentamiento,comas
+P04,Mercado Collique,mercado,comas
+P05,AAHH La Libertad,asentamiento,comas
+P06,AAHH El Progreso,asentamiento,carabayllo
+P07,Mercado Tungasuca,mercado,carabayllo
+P08,IE Carabayllo,colegio,carabayllo
+P09,AAHH Raul Porras Barrenechea,asentamiento,carabayllo
+P10,AAHH Lomas de Carabayllo,asentamiento,carabayllo

@@ -1,4 +1,5 @@
-id,tipo,capacidad_litros,costo_por_km,estado
-U01,cisterna,10000,3,ocupada
-U02,cisterna,7000,3,disponible
-U03,cisterna,15000,4,disponible
+codigo,tipo,capacidad_litros,costo_km,estado
+U01,cisterna,10000,3.5,disponible
+U02,cisterna,7000,3.0,ocupada
+U03,cisterna,15000,4.5,disponible
+U04,cisterna,5000,2.5,ocupada

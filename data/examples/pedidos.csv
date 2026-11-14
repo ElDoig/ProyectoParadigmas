@@ -1,7 +1,10 @@
-id,origen,destino,carga_litros,prioridad,estado,unidad_asignada
-D001,P01,P02,6000,alta,pendiente,
-D002,P01,P04,18000,media,pendiente,
-D003,P01,P03,4000,alta,asignado,U01
-D004,P01,P05,5000,media,entregado,U03
-D005,P01,P06,2000,baja,entregado,U02
-D006,P01,P08,3000,baja,pendiente,
+codigo,origen,destino,litros,prioridad,estado,unidad
+D001,P01,P03,6000,alta,pendiente,
+D002,P01,P05,4000,media,pendiente,
+D003,P01,P07,7000,alta,asignado,U02
+D004,P01,P08,18000,alta,pendiente,
+D005,P01,P09,5000,baja,asignado,U04
+D006,P01,P10,3000,alta,pendiente,
+D007,P01,P02,8000,media,entregado,U01
+D008,P01,P06,9000,baja,entregado,U03
+D009,P01,P04,2500,baja,entregado,U01
