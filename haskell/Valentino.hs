@@ -8,26 +8,17 @@
     FA    Plan de recarga     (planRecarga)
     Funciones para mostrar los resultados (textoCostos, textoPrueba, ...)
 
-  DEPENDE DE (no estan en este archivo):
-    Carlos (4.2.2) - tipos con estos nombres de campos:
-      Conexion { conOrigen, conDestino :: String, conDistancia :: Double,
-                 conTiempo :: Int, conEstado :: EstadoConexion }
-      data EstadoConexion = Habilitada | Cerrada
-      Unidad   { uniCodigo :: String, uniCapacidad :: Int, uniCostoKm :: Double, ... }
-      Pedido   { pedCodigo, pedOrigen, pedDestino :: String, pedLitros :: Int,
-                 pedEstado :: EstadoPedido, ... }
-      data EstadoPedido = Pendiente | Asignado | Entregado
-      type Ruta = [String]
-    Nicolas (4.2.3) - vecinos :: [Conexion] -> String -> [String]
-                      (solo conexiones habilitadas, en ambos sentidos)
-
-  Si los nombres definitivos del grupo son distintos, solo hay que
-  cambiar los nombres de los campos en este archivo.
+  Usa de Carlos (4.2.2): los tipos Conexion, Unidad, Pedido, EstadoConexion
+  y EstadoPedido, y sus funciones de acceso (conexionOrigen, pedidoLitros, ...).
+  Usa de Nicolas (4.2.3): vecinos :: [Conexion] -> String -> [String]
+  (solo conexiones habilitadas, en ambos sentidos).
 -}
 
 module Valentino
-  ( -- 4.2.4
-    rutasPosibles
+  ( -- Sinonimo de tipo para las rutas
+    Ruta
+    -- 4.2.4
+  , rutasPosibles
     -- 4.2.5
   , ResultadoRuta (..)
   , costoRuta
@@ -45,8 +36,11 @@ module Valentino
   , unirFlechas
   ) where
 
-import Carlos   -- tipos: Conexion, Unidad, Pedido, EstadoConexion, EstadoPedido, Ruta
+import Carlos
 import Nicolas (vecinos)
+
+-- Una ruta es la lista de codigos de puntos, por ejemplo ["P01","P02","P04"]
+type Ruta = [String]
 
 -- =====================================================================
 -- 4.2.4 Rutas posibles - Autor: Valentino Mantilla
@@ -96,8 +90,8 @@ data ResultadoRuta = RutaValida Double Int      -- km y minutos
 buscarTramo :: [Conexion] -> String -> String -> Maybe Conexion
 buscarTramo [] _ _ = Nothing
 buscarTramo (c:cs) a b
-  | conOrigen c == a && conDestino c == b = Just c     -- sentido de ida
-  | conOrigen c == b && conDestino c == a = Just c     -- sentido de vuelta
+  | conexionOrigen c == a && conexionDestino c == b = Just c     -- sentido de ida
+  | conexionOrigen c == b && conexionDestino c == a = Just c     -- sentido de vuelta
   | otherwise                             = buscarTramo cs a b
 
 -- Recursion sobre la ruta, tramo por tramo:
@@ -116,11 +110,11 @@ costoRuta conexiones (a:b:resto) =
 -- esta cerrado, luego si el resto ya tenia error, y al final la suma.
 agregarTramo :: Conexion -> ResultadoRuta -> ResultadoRuta
 agregarTramo tramo _
-  | conEstado tramo == Cerrada =
-      RutaInvalida ("El tramo " ++ conOrigen tramo ++ " - " ++ conDestino tramo ++ " esta cerrado")
+  | conexionEstado tramo == Cerrada =
+      RutaInvalida ("El tramo " ++ conexionOrigen tramo ++ " - " ++ conexionDestino tramo ++ " esta cerrado")
 agregarTramo _ (RutaInvalida mensaje) = RutaInvalida mensaje
 agregarTramo tramo (RutaValida km minutos) =
-  RutaValida (conDistancia tramo + km) (conTiempo tramo + minutos)
+  RutaValida (conexionDistanciaKm tramo + km) (conexionTiempoMin tramo + minutos)
 
 -- =====================================================================
 -- FA - Plan de recarga para un pedido de gran volumen
@@ -174,23 +168,23 @@ rutaMasCorta conexiones inicio fin =
 -- Funcion principal de la FA: primero valida con guardas
 planRecarga :: [Conexion] -> Unidad -> Pedido -> ResultadoPlan
 planRecarga conexiones unidad pedido
-  | pedEstado pedido /= Pendiente =
-      PlanNoPosible ("El pedido " ++ pedCodigo pedido ++ " no esta pendiente")
-  | uniCapacidad unidad <= 0 =
+  | pedidoEstado pedido /= Pendiente =
+      PlanNoPosible ("El pedido " ++ pedidoCodigo pedido ++ " no esta pendiente")
+  | unidadCapacidadLitros unidad <= 0 =
       PlanNoPosible "La cisterna tiene una capacidad invalida"
-  | pedLitros pedido <= uniCapacidad unidad =
-      PlanNoPosible ("El pedido cabe en un solo viaje de " ++ uniCodigo unidad
+  | pedidoLitros pedido <= unidadCapacidadLitros unidad =
+      PlanNoPosible ("El pedido cabe en un solo viaje de " ++ unidadCodigo unidad
                      ++ "; no necesita plan de recarga")
   | otherwise =
-      armarPlan unidad pedido (rutaMasCorta conexiones (pedOrigen pedido) (pedDestino pedido))
+      armarPlan unidad pedido (rutaMasCorta conexiones (pedidoOrigen pedido) (pedidoDestino pedido))
 
 -- Arma el plan a partir de la ruta mas corta (pattern matching con Maybe)
 armarPlan :: Unidad -> Pedido -> Maybe (Ruta, Double, Int) -> ResultadoPlan
 armarPlan _ _ Nothing = PlanNoPosible "No hay ruta habilitada entre la planta y el destino"
 armarPlan unidad pedido (Just (ruta, km, minutos)) =
-  PlanValido ruta cargas kmTotal (minutos * tramos) (kmTotal * uniCostoKm unidad)
+  PlanValido ruta cargas kmTotal (minutos * tramos) (kmTotal * unidadCostoKm unidad)
   where
-    cargas  = repartirCarga (pedLitros pedido) (uniCapacidad unidad)
+    cargas  = repartirCarga (pedidoLitros pedido) (unidadCapacidadLitros unidad)
     tramos  = 2 * length cargas - 1
     kmTotal = km * fromIntegral tramos   -- fromIntegral: Int -> Double
 
@@ -244,20 +238,20 @@ detallePlan (PlanValido ruta cargas km minutos costo) =
 
 textoPlan :: Unidad -> Pedido -> ResultadoPlan -> String
 textoPlan unidad pedido resultado =
-     "Pedido " ++ pedCodigo pedido ++ " (" ++ show (pedLitros pedido) ++ " L) con cisterna "
-  ++ uniCodigo unidad ++ " (" ++ show (uniCapacidad unidad) ++ " L)\n"
+     "Pedido " ++ pedidoCodigo pedido ++ " (" ++ show (pedidoLitros pedido) ++ " L) con cisterna "
+  ++ unidadCodigo unidad ++ " (" ++ show (unidadCapacidadLitros unidad) ++ " L)\n"
   ++ detallePlan resultado
 
 -- Buscar por codigo con filter; si la lista resultante esta vacia: Nothing
 buscarPedido :: String -> [Pedido] -> Maybe Pedido
 buscarPedido codigo pedidos =
-  case filter (\p -> pedCodigo p == codigo) pedidos of
+  case filter (\p -> pedidoCodigo p == codigo) pedidos of
     (p:_) -> Just p
     []    -> Nothing
 
 buscarUnidad :: String -> [Unidad] -> Maybe Unidad
 buscarUnidad codigo unidades =
-  case filter (\u -> uniCodigo u == codigo) unidades of
+  case filter (\u -> unidadCodigo u == codigo) unidades of
     (u:_) -> Just u
     []    -> Nothing
 
@@ -267,4 +261,3 @@ textoPrueba conexiones unidades pedidos codPedido codUnidad =
   case (buscarPedido codPedido pedidos, buscarUnidad codUnidad unidades) of
     (Just p, Just u) -> textoPlan u p (planRecarga conexiones u p)
     _                -> "No se encontro " ++ codPedido ++ " o " ++ codUnidad ++ "\n"
-
