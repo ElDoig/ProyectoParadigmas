@@ -1,9 +1,42 @@
-% Compartimos esta regla para usarla desde main o desde las pruebas.
-:- module(carlos, [puede_atender/4]).
+% Compartimos la lectura y las consultas sin copiar el codigo en otros archivos.
+:- module(carlos, [leer_datos/4, leer_puntos/2, leer_conexiones/2,
+                   leer_unidades/2, leer_pedidos/2, puede_atender/2, puede_atender/4]).
 
-% TODO 4.3.1 (Carlos Doig): leer los cuatro CSV y construir los hechos.
+% Esta biblioteca ya viene con SWI-Prolog y nos evita separar las comas a mano.
+:- use_module(library(csv)).
 
-% 4.3.5 - Carlos Doig: por ahora recibimos las listas, sin leer archivos.
+% 4.3.1 - Carlos Doig: cada CSV se convierte en una lista de registros Prolog.
+% La primera fila debe tener esta cabecera exacta; solo devolvemos las otras filas.
+% functor pone el nombre del registro, arity revisa sus columnas y encoding lee UTF-8.
+leer_puntos(Archivo, Puntos) :-
+    csv_read_file(Archivo, Filas, [functor(punto), arity(4), encoding(utf8)]),
+    Filas = [punto(codigo, nombre, tipo, zona)|Puntos].
+
+leer_conexiones(Archivo, Conexiones) :-
+    csv_read_file(Archivo, Filas, [functor(conexion), arity(5), encoding(utf8)]),
+    Filas = [conexion(origen, destino, distancia_km, tiempo_min, estado)|Conexiones].
+
+leer_unidades(Archivo, Unidades) :-
+    csv_read_file(Archivo, Filas, [functor(unidad), arity(5), encoding(utf8)]),
+    Filas = [unidad(codigo, tipo, capacidad_litros, costo_km, estado)|Unidades].
+
+leer_pedidos(Archivo, Pedidos) :-
+    csv_read_file(Archivo, Filas, [functor(pedido), arity(7), encoding(utf8)]),
+    Filas = [pedido(codigo, origen, destino, litros, prioridad, estado, unidad)|Pedidos].
+
+% Usamos las copias locales; los ejemplos versionados no se modifican.
+leer_datos(Puntos, Conexiones, Unidades, Pedidos) :-
+    leer_puntos('data/runtime/puntos.csv', Puntos),
+    leer_conexiones('data/runtime/conexiones.csv', Conexiones),
+    leer_unidades('data/runtime/unidades.csv', Unidades),
+    leer_pedidos('data/runtime/pedidos.csv', Pedidos).
+
+% 4.3.5 - Carlos Doig: leemos los datos y reutilizamos la regla con listas.
+% Se vuelven a leer en cada consulta para no guardar una copia desactualizada.
+puede_atender(CodigoUnidad, CodigoPedido) :-
+    leer_datos(_, _, Unidades, Pedidos),
+    puede_atender(CodigoUnidad, CodigoPedido, Unidades, Pedidos).
+
 % unidad(Codigo, Tipo, CapacidadLitros, CostoKm, Estado).
 % pedido(Codigo, Origen, Destino, Litros, Prioridad, Estado, Unidad).
 puede_atender(CodigoUnidad, CodigoPedido, Unidades, Pedidos) :-

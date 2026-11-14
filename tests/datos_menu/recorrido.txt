@@ -1,0 +1,23 @@
+1
+1
+P01 Planta_Chillon planta carabayllo
+1
+P02 Colegio_Comas colegio comas
+2
+P01 P02 5 20 habilitada
+3
+U01 10000 3.5
+4
+D001 P01 P02 6000 alta
+0
+4
+1
+P01 12000
+2
+P01
+3
+P01 5000 20000
+2
+P01
+0
+0
