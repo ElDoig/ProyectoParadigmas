@@ -1,5 +1,5 @@
-% Dejamos disponible la regla de Carlos al cargar este archivo.
-:- module(planificador, [puede_atender/4]).
+% Dejamos disponibles la lectura y las dos formas de consultar la regla de Carlos.
+:- module(planificador, [leer_datos/4, puede_atender/2, puede_atender/4]).
 
 % Traemos la regla sin copiarla en este archivo.
 :- use_module(carlos).
@@ -7,4 +7,4 @@
 :- use_module(valentino).
 :- use_module(diego).
 
-% Punto de carga inicial. La lectura de los CSV sigue pendiente.
+% Ejecutar desde la raiz del repositorio para encontrar data/runtime.
