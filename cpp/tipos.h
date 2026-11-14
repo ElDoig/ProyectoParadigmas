@@ -44,3 +44,10 @@ struct Pedido {
     // "" representa el campo CSV vacio cuando no hay unidad asignada.
     std::string unidad;
 };
+
+// FA - Autor: Carlos Doig. Campos del CSV stock_agua.csv, sin cambiarlos.
+struct StockAgua {
+    std::string punto_planta;
+    int litros_stock;
+    int litros_reservados;
+};
