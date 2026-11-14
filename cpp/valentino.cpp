@@ -3,16 +3,7 @@
 #include "valentino.h"
 
 // 4.1.4 - Valentino Mantilla: gestion de estados (paradigma imperativo).
-// Sigue el estilo de carlos.cpp y lo visto en clase (Semanas 08 a 10):
-//  - Arreglos de estructuras (Pedido pedidos[], Unidad unidades[]) con su
-//    cantidad; los estados son enum class (sin numeros magicos).
-//  - Clausulas de guarda: primero se validan las precondiciones y, si algo
-//    falla, se devuelve un mensaje sin tocar el estado.
-//  - Mutacion controlada: el estado (los arreglos) solo se modifica
-//    despues de pasar todas las comprobaciones.
-//  - Paso por direccion: los resultados extra salen por punteros (int*),
-//    revisando antes que no sean nullptr.
-//  - Solo variables automaticas (pila): no se usa new/delete.
+
 
 // Buscamos el pedido por su codigo. Devuelve su posicion o -1.
 int buscarPedidoEstados(std::string codigo, Pedido pedidos[], int cantidad) {
