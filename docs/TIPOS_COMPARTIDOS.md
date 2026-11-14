@@ -4,18 +4,19 @@ Esta parte implementa las estructuras C++ base y la funcionalidad Haskell 4.2.2.
 
 ## Uso en C++17
 
-Desde cualquier archivo de `cpp/`, incluir `#include "tipos.h"`. Los cuatro registros están en el namespace `logistica`: `Punto`, `Conexion`, `Unidad` y `Pedido`. `Unidad` representa una cisterna; no crear otra estructura con los mismos campos.
+Desde cualquier archivo de `cpp/`, incluir `#include "tipos.h"` una sola vez, directamente en el `.cpp`. Los cuatro registros son `Punto`, `Conexion`, `Unidad` y `Pedido`. `Unidad` representa una cisterna; no crear otra estructura con los mismos campos.
+
+Se utilizan `struct`, `enum class`, `int`, `double` y `std::string`. No hay un namespace propio ni guardas de preprocesador: el encabezado no debe incluirse desde otros encabezados ni dos veces en el mismo `.cpp`. Si la integración requiere inclusiones indirectas, consultar antes de añadir mecanismos no vistos en clase.
 
 ```cpp
 #include "tipos.h"
 
-logistica::Conexion conexion{
-    "P01", "P06", 4.0, 15, logistica::EstadoConexion::habilitada
+Conexion conexion{
+    "P01", "P06", 4.0, 15, EstadoConexion::habilitada
 };
-logistica::Pedido pedido{
+Pedido pedido{
     "D001", "P01", "P03", 6000,
-    logistica::Prioridad::alta, logistica::EstadoPedido::pendiente,
-    std::nullopt
+    Prioridad::alta, EstadoPedido::pendiente, ""
 };
 ```
 
@@ -23,7 +24,7 @@ Los miembros tienen exactamente los nombres y orden de las cabeceras de los CSV 
 
 ## Uso en Haskell
 
-Importar `Carlos (Conexion(..), Unidad(..), Pedido(..), EstadoConexion(..), EstadoUnidad(..), Prioridad(..), EstadoPedido(..))` o seleccionar solo los nombres necesarios. Se exportan constructores y selectores. `Main.hs` puede conservar su `import Carlos ()`; los módulos de compañeros incorporarán los tipos cuando los necesiten.
+Los tres tipos usan constructores normales y las funciones de acceso usan patrones. `Carlos.hs` comienza con `module Carlos where`, la declaración mínima autorizada por Carlos para compartir los tipos entre archivos. Sin una lista de exportaciones, quedan disponibles todos los tipos, constructores y funciones definidos en el archivo. Los compañeros pueden usarlos con `import Carlos`. El punto de entrada existente sigue siendo compatible.
 
 ```haskell
 import Carlos
@@ -32,15 +33,11 @@ conexion :: Conexion
 conexion = Conexion "P01" "P06" 4.0 15 Habilitada
 
 pedido :: Pedido
-pedido = Pedido
-    { pedidoCodigo = "D001"
-    , pedidoOrigen = "P01"
-    , pedidoDestino = "P03"
-    , pedidoLitros = 6000
-    , pedidoPrioridad = Alta
-    , pedidoEstado = Pendiente
-    , pedidoUnidad = Nothing
-    }
+pedido = Pedido "D001" "P01" "P03" 6000 Alta Pendiente ""
+
+-- Ejemplo de lectura de un campo con un patron:
+litrosDeEjemplo :: Pedido -> Int
+litrosDeEjemplo (Pedido _ _ _ litros _ _ _) = litros
 ```
 
 `Eq` permite comparar registros y estados; `Show` permite inspeccionarlos. Solo `Prioridad` deriva `Ord`: el orden ascendente es `Alta`, `Media`, `Baja`, para el reporte posterior. No se define un orden artificial de registros ni estados.
@@ -54,14 +51,14 @@ pedido = Pedido
 | Unidad | `codigo`, `tipo`, `capacidad_litros`, `costo_km`, `estado` | `unidadCodigo`, `unidadTipo`, `unidadCapacidadLitros`, `unidadCostoKm`, `unidadEstado` |
 | Pedido | `codigo`, `origen`, `destino`, `litros`, `prioridad`, `estado`, `unidad` | `pedidoCodigo`, `pedidoOrigen`, `pedidoDestino`, `pedidoLitros`, `pedidoPrioridad`, `pedidoEstado`, `pedidoUnidad` |
 
-Los prefijos Haskell evitan colisiones de selectores sin extensiones ni dependencias externas. En ambos lenguajes los identificadores son texto y conservan mayúsculas y ceros.
+Los accesores Haskell son funciones normales escritas con pattern matching, no campos record generados automaticamente. Conservan los nombres usados en la tabla para facilitar el trabajo de los compañeros. En ambos lenguajes los identificadores son texto y conservan mayúsculas y ceros.
 
-Los enteros se representan con `std::int64_t` / `Int64` (64 bits con signo); los lectores deben detectar desbordamientos antes de construir el registro. Los decimales usan `double` / `Double`: son aproximaciones binarias, por lo que falta acordar redondeo al calcular y mostrar costos. Esto no cambia el formato decimal del CSV. Los tipos no verifican automáticamente positividad, finitud, referencias ni coherencia entre archivos.
+Los enteros se representan con `int` / `Int`, los tipos básicos vistos en los apuntes. No se garantiza que ambos tengan el mismo rango; los lectores deberán rechazar valores fuera del rango del tipo de destino. Los datos de prueba actuales caben en ambos. Los decimales usan `double` / `Double`: son aproximaciones binarias, por lo que falta acordar redondeo al calcular y mostrar costos. Esto no cambia el formato decimal del CSV. Los tipos no verifican automáticamente positividad, finitud, referencias ni coherencia entre archivos.
 
 ## Coordinación con Nicolás y Valentino
 
 - Nicolás: usar estos registros en la carga/guardado C++ y en el lector Haskell. Convertir explícitamente textos CSV a enumeraciones. `show Habilitada` produce `Habilitada`, no `habilitada`; no usar `Show` ni los valores numéricos de un enum C++ como serialización CSV.
-- Campo `unidad` de pedidos: vacío se convierte a `std::nullopt` / `Nothing`; un ID a `std::optional<std::string>{"U01"}` / `Just "U01"`. Una cadena vacía dentro de `Just` o `optional` no representa ausencia. Al escribir vacío, conservar la coma final.
+- Campo `unidad` de pedidos: la cadena `""` representa que no hay unidad asignada; otro texto, como `"U01"`, conserva el código. Es la misma representación de ausencia que usa el CSV. Al escribir vacío, conservar la coma final.
 - Valentino: asignar con `EstadoPedido::asignado` / `Asignado` y una unidad identificada, y ocupar la unidad. Al entregar, conservar el ID histórico en el pedido y liberar la unidad. Estas operaciones siguen pendientes en su módulo; el stock se coordinará después con Carlos.
 - Las conexiones representan una sola fila por vía de doble sentido; los tipos no duplican el sentido inverso ni implementan rutas. El plan de recarga posterior conserva las mismas estructuras.
 
@@ -79,12 +76,25 @@ Los lectores futuros deben usar únicamente los nombres adoptados. No había lec
 
 La integración del stock sí tiene un dato pendiente: `stock_agua.csv` conserva 4000 litros reservados, pero los pedidos asignados `D003` y `D005` suman 12000. Carlos y Valentino deben coordinar su actualización antes de probar reservas. Los campos, tipos y estados de los registros base sí representan los datos actuales.
 
-## Verificación realizada
+## Criterio de clase
 
-- C++: compilación completa de los cinco `.cpp` con MSVC 19.12, C++17, `/W4 /WX`; sin advertencias. Menú probado con `0`, salida correcta.
-- Encabezado: compilación y enlace de dos consumidores independientes, inclusión repetida de `tipos.h`, construcción de los cuatro registros, estados, ausencia/presencia de unidad, conservación de la unidad entregada y volumen superior al límite de un entero de 32 bits. Prueba terminada con código 0.
-- Correspondencia: comprobadas las cuatro cabeceras contra el contrato y los miembros C++, y los valores de tipos de punto, estados y prioridades contra los datos de prueba.
-- Haskell: revisión estática de los siete tipos exportados, los 17 selectores sin duplicados y los imports. Solo se usa `Data.Int` del paquete estándar `base`. No se encontró GHC disponible: la compilación y la ejecución siguen pendientes; una revisión estática no las sustituye.
-- Los programas y fuentes usados para las comprobaciones puntuales están en `build/carlos-base/`, ignorado por Git. No se requieren nuevas dependencias del proyecto.
+La implementación se limita a lo respaldado por los apuntes de Paradigmas y por la confirmación del equipo sobre `std::string` y encabezados `.h`:
 
-En un equipo con GHC, desde la raíz se puede verificar la integración con `ghc -Wall -Werror -fno-code -ihaskell haskell/Main.hs` y ejecutar con `runghc -ihaskell haskell/Main.hs`. Las funciones lectoras de Nicolás deben importar los tipos de `Carlos` al implementarse.
+- Semana 04: `data`, constructores, `deriving`, `Eq`, `Show` y `Ord`.
+- Semanas 04 y 05: pattern matching, firmas de funciones y comodín `_`.
+- Resumen del examen 1: `Int`, `Double` y `String`.
+- Semana 09: estructuras, tipos numéricos y `enum class`.
+- Semana 11: ejemplo de inicialización de estructuras con llaves.
+- Semanas 12 y 13: clases, constructores y herencia; no se necesitan para estas estructuras.
+- Carlos confirmó que `import` sí se enseñó y autorizó `module Carlos where` con un comentario breve que explique su uso. Esta autorización se limita a la organización de los archivos.
+
+Ante una funcionalidad que requiera recursos no vistos, consultar al equipo antes de incorporarlos. Las comprobaciones de la versión anterior con enteros de 64 bits y unidad opcional no certifican esta versión simplificada.
+
+## Verificación de la versión simplificada
+
+- C++: compilados los cinco `.cpp` con MSVC 19.12, C++17, `/W4 /WX`; sin advertencias. Menú probado con `0`, salida correcta.
+- Compartición de estructuras: compilación y enlace de dos consumidores, incluyendo el encabezado una sola vez por `.cpp`. Construidos los cuatro tipos y probados los códigos, medidas, estados y unidad ausente (`""`) o presente. Resultado: código de salida 0.
+- Los campos de las cuatro estructuras siguen coincidiendo con las cabeceras de los CSV de prueba.
+- Haskell: revisión estática de los tres constructores y las 17 funciones de acceso; cantidad de argumentos y tipo del campo recuperado coherentes. No se encontró GHC disponible: no se ha compilado ni ejecutado esta versión.
+- Eliminados del código de tipos C++ los recursos no vistos señalados en la revisión; el cuerpo de tipos Haskell ya no usa records ni tipos opcionales o enteros especializados. La declaración de módulo quedó simplificada a `module Carlos where`, según lo autorizado.
+- Comprobaciones puntuales en `build/carlos-clases/`, ignorado por Git. Los datos CSV y archivos de compañeros se mantienen intactos.
