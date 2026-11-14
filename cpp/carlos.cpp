@@ -1,4 +1,6 @@
-// Carlos Doig: implementar aqui su parte de C++.
+#include "tipos.h"
+
+// Carlos Doig: estructuras compartidas disponibles en tipos.h.
 // TODO 4.1.1 (Carlos Doig): menu principal; coordinar integracion con main.cpp.
 // TODO 4.1.3 (Carlos Doig): registro de puntos, conexiones, unidades y pedidos
 // con validacion de codigos, referencias y valores positivos.
