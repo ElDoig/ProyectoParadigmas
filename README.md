@@ -4,10 +4,11 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 
 ## Estado actual
 
-- C++: menu de Carlos (4.1.1) con registro por consola de puntos, conexiones, cisternas y pedidos (4.1.3), inicio de stock por planta, consulta de agua libre y reposiciones. Las funciones de reservas y entregas de agua tambien estan implementadas en memoria.
+- C++: menu de Carlos (4.1.1) con registro por consola de puntos, conexiones, cisternas y pedidos (4.1.3), inicio de stock por planta, consulta de agua libre y reposiciones. La opcion 2 integra los estados de Valentino con las reservas y entregas de agua de Carlos.
+- C++: opcion 3 conectada al submenu de Diego: consultas de puntos, conexiones y pedidos, reporte general, registro de alturas y limites de vias, y consulta de paso por altura.
 - Haskell: tipos de conexiones, unidades y pedidos (4.2.2 de Carlos), más un punto de entrada mínimo.
 - Prolog: lectura de los cuatro CSV base (4.3.1 de Carlos) y regla de atencion por disponibilidad y capacidad (4.3.5). Se puede consultar con codigos o proporcionar listas de datos.
-- La carga y el guardado CSV en C++, los calculos, la gestion de estados y los adicionales de los demas integrantes siguen pendientes. La sesion C++ empieza vacia y sus datos no se conservan al salir.
+- La carga y el guardado CSV en C++, los calculos de Haskell y el adicional de Nicolas siguen pendientes de integracion en esta rama. La sesion C++ empieza vacia y sus datos no se conservan al salir. La consulta C++ de recargas solo indica si el pedido supera la capacidad; no calcula viajes, distancia ni costo.
 
 ## Archivos
 
@@ -16,7 +17,9 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 | `cpp/main.cpp` | Punto de entrada; llama al menu de Carlos. |
 | `cpp/tipos.h` | Estructuras y enumeraciones compartidas. |
 | `cpp/carlos.h`, `cpp/carlos.cpp` | Menu, registros y adicional de stock y reservas. |
-| `cpp/nicolas.cpp`, `cpp/valentino.cpp`, `cpp/diego.cpp` | Archivos reservados para los demás integrantes. |
+| `cpp/diego.h`, `cpp/diego.cpp` | Consultas, reporte general y control de alturas de Diego. |
+| `cpp/valentino.h`, `cpp/valentino.cpp` | Funciones de estados y consulta de recargas de Valentino. El menu de Carlos coordina los estados con el agua. |
+| `cpp/nicolas.cpp` | Archivo reservado para Nicolas. |
 | `haskell/Main.hs` | Punto de entrada de Haskell. |
 | `haskell/Carlos.hs` | Tipos y funciones de acceso a sus campos. |
 | `haskell/Nicolas.hs`, `haskell/Valentino.hs`, `haskell/Diego.hs` | Archivos de los demás integrantes. |
@@ -25,7 +28,10 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 | `data/runtime/` | Datos locales de ejecución, ignorados por Git. |
 | `tests/registro_carlos.cpp` | Pruebas de las funciones de registro. |
 | `tests/stock_carlos.cpp` | Pruebas de stock, reservas, entregas y reposiciones. |
+| `tests/estados_agua_carlos.cpp` | Pruebas de asignacion y entrega coordinadas con el agua. |
 | `tests/datos_menu/recorrido.txt` | Entradas para repetir un recorrido del menu sin modificar archivos CSV. |
+| `tests/datos_menu/consultas_diego.txt` | Recorrido de registros, consultas, reporte y alturas desde la opcion 3. |
+| `tests/datos_menu/estados_agua.txt` | Recorrido de asignacion, reserva, entrega y reposicion desde el menu. |
 | `tests/atencion_carlos.pl` | Datos aislados y pruebas de la regla de atencion. |
 | `tests/lectura_carlos.pl`, `tests/datos_csv/` | Pruebas de lectura y archivos pequenos para comprobar cabeceras. |
 
@@ -62,8 +68,8 @@ cl /nologo /std:c++17 /EHsc /W4 cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/
 | Opcion principal | Funcion |
 | --- | --- |
 | 1 | Registrar puntos, conexiones, cisternas y pedidos mediante un submenu. |
-| 2 | Gestion de estados: visible como pendiente, todavia sin implementar. |
-| 3 | Consultas generales y reporte: visibles como pendientes, todavia sin implementar. |
+| 2 | Cerrar o habilitar conexiones, asignar y entregar pedidos con control de agua, y consultar necesidad de recargas. |
+| 3 | Submenu de Diego: consultas, reporte general, alturas de cisternas y limites de vias. |
 | 4 | Iniciar stock de una planta registrada, consultar agua libre y reponer agua. |
 | 0 | Salir. En los submenus, volver al menu principal. |
 
@@ -71,9 +77,27 @@ La entrada usa `cin >>`: escribir cada campo sin espacios, por ejemplo `Planta_C
 
 Si una extraccion numerica falla o se termina la entrada, el programa avisa y termina con codigo 1, sin guardar. La salida con `0` devuelve codigo 0. La recuperacion de entradas numericas mal formadas queda pendiente; no se ha añadido un analizador de texto.
 
-Hay espacio de trabajo para 100 puntos, conexiones, cisternas y pedidos, y control de agua de 10 plantas con hasta 100 reservas por planta. Son capacidades de los arreglos de esta sesion, no nuevos limites de los CSV. El control de stock solo se puede iniciar una vez por planta y empieza sin reservas porque esta sesion aun no carga pedidos asignados. La integracion futura debe cargar el stock y preparar sus reservas, sin reemplazarlos con un inicio nuevo.
+Hay espacio de trabajo para 100 puntos, conexiones, cisternas, pedidos, alturas y restricciones, y control de agua de 10 plantas con hasta 100 reservas por planta. Son capacidades de los arreglos de esta sesion, no nuevos limites de los CSV. El control de stock solo se puede iniciar una vez por planta y empieza sin reservas porque esta sesion aun no carga pedidos asignados. La integracion futura debe cargar el stock y preparar sus reservas, sin reemplazarlos con un inicio nuevo.
 
-Las reservas y entregas de agua se conectaran a la asignacion y entrega de pedidos cuando se integre la gestion de estados. El menu no las ejecuta por separado dejando pedidos a medio asignar. La consulta de agua libre corresponde al adicional de Carlos; las otras consultas y reportes siguen pendientes de integracion.
+Para asignar un pedido desde la opcion 2, primero inicia el stock de su planta de origen en la opcion 4. La asignacion reserva agua y ocupa la cisterna; la entrega descuenta el stock, libera la reserva y deja disponible la cisterna. Una operacion rechazada conserva los datos. Las reservas y entregas no se ejecutan por separado. El submenu de Diego comparte los registros y estados; sus alturas y restricciones se conservan al volver al menu principal, hasta salir del programa.
+
+Para probar la asignacion y entrega completas despues de compilar:
+
+```powershell
+Get-Content -LiteralPath tests/datos_menu/estados_agua.txt | .\build\planificador.exe
+```
+
+Se inicia un stock de 12000 litros y se asigna un pedido de 6000: quedan 6000 reservados y 6000 libres, sin reducir el stock. Al entregar quedan 6000 de stock y cero reservados; al reponer 5000 quedan 11000 libres. La opcion 3 permite ver el pedido asignado y luego entregado, con la cisterna disponible al final.
+
+Para probar la opcion 3, registra primero los puntos, una conexion, una cisterna y un pedido desde la opcion 1. Luego entra a 3: las opciones 1 a 5 consultan esos datos y muestran el reporte; 6 registra la altura de una cisterna, 7 el limite de una conexion y 8 compara ambas alturas. Usa 0 para volver al menu principal.
+
+Tambien puedes repetir ese recorrido automaticamente:
+
+```powershell
+Get-Content -LiteralPath tests/datos_menu/consultas_diego.txt | .\build\planificador.exe
+```
+
+Debe mostrar 2 puntos, 1 conexion, 1 cisterna y 1 pedido pendiente de 6000 litros. La cisterna de 3.5 metros no pasa por el limite de 3.2 metros; al volver a entrar al submenu, la misma restriccion se conserva y se aplica en el sentido inverso. La integracion se comprobo con 6 escenarios de consola, incluidos duplicados, entrada invalida y el recorrido anterior de agua.
 
 Para repetir un ejemplo completo despues de compilar:
 
@@ -88,14 +112,14 @@ Registra dos puntos, una conexion, una cisterna y un pedido; inicia 12000 litros
 Con GCC:
 
 ```powershell
-g++ -std=c++17 -Wall -Wextra -pedantic tests/registro_carlos.cpp cpp/carlos.cpp -o build/pruebas_registro.exe
+g++ -std=c++17 -Wall -Wextra -pedantic tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp -o build/pruebas_registro.exe
 .\build\pruebas_registro.exe
 ```
 
 Alternativa MSVC:
 
 ```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/registro_carlos.cpp cpp/carlos.cpp /Fo:build\ /Fe:build\pruebas_registro.exe
+cl /nologo /std:c++17 /EHsc /W4 tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp /Fo:build\ /Fe:build\pruebas_registro.exe
 .\build\pruebas_registro.exe
 ```
 
@@ -132,25 +156,41 @@ Las funciones de registro reciben textos y numeros ya preparados. El menu captur
 
 El resultado sigue siendo `""` en caso de exito o un mensaje de error. Antes de una reserva o entrega, la suma de las reservas activas debe coincidir con `litros_reservados`. Si hay un rechazo, no se modifican el saldo, las reservas ni su contador. El llamador debe indicar las cantidades y capacidades reales de sus arreglos.
 
-Para Valentino: validar primero la asignacion y llamar a `reservarAgua` antes de cambiar el pedido a asignado. Para una entrega, llamar a `registrarEntregaAgua` mientras el pedido todavia esta asignado y, solo si tiene exito, marcarlo entregado y liberar la cisterna. Estas funciones no cambian esos estados. Nicolas conectara despues la carga y el guardado de todos los datos relacionados; no guardar cambios intermedios.
+La opcion 2 llama a `asignarPedidoConAgua` y `entregarPedidoConAgua`, declaradas en `carlos.h`. Ambas reutilizan las validaciones y cambios de estado de Valentino. Primero preparan los estados en copias del pedido y la cisterna; despues operan sobre el agua y, solo si sale bien, aplican las copias. Asi un rechazo no deja estados cambiados sin su reserva o descuento. Las funciones originales de Valentino se conservan; su submenu independiente no se usa en el flujo integrado porque no recibe el stock. Nicolas conectara despues la carga y el guardado de todos los datos relacionados; no guardar cambios intermedios.
 
 El contrato no fija capacidad maxima para la planta. `topeStock` es un limite de trabajo recibido como parametro, no una nueva columna ni una cifra impuesta a los datos. Comprobar `litrosRecibidos <= topeStock - stockActual` antes de sumar evita el desbordamiento usando operaciones basicas. El tope debe ser representable como `int` y no menor que el stock actual.
 
 Con GCC, despues de crear `build/`:
 
 ```powershell
-g++ -std=c++17 -Wall -Wextra -pedantic tests/stock_carlos.cpp cpp/carlos.cpp -o build/pruebas_stock.exe
+g++ -std=c++17 -Wall -Wextra -pedantic tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp -o build/pruebas_stock.exe
 .\build\pruebas_stock.exe
 ```
 
 Alternativa MSVC:
 
 ```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/stock_carlos.cpp cpp/carlos.cpp /Fo:build\ /Fe:build\pruebas_stock.exe
+cl /nologo /std:c++17 /EHsc /W4 tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp /Fo:build\ /Fe:build\pruebas_stock.exe
 .\build\pruebas_stock.exe
 ```
 
 Resultado obtenido con MSVC: `80 pruebas de stock, 0 fallos.` Se usan estados aislados en memoria; no se escriben archivos.
+
+Para comprobar la integracion entre estados y agua con GCC:
+
+```powershell
+g++ -std=c++17 -Wall -Wextra -pedantic tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp -o build/pruebas_estados_agua.exe
+.\build\pruebas_estados_agua.exe
+```
+
+Alternativa MSVC:
+
+```powershell
+cl /nologo /std:c++17 /EHsc /W4 tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp /Fo:build\ /Fe:build\pruebas_estados_agua.exe
+.\build\pruebas_estados_agua.exe
+```
+
+Resultado obtenido con MSVC: `26 pruebas de estados y agua, 0 fallos.` Comprueban rechazos sin cambios, capacidad y agua insuficientes, reservas, entregas, duplicados, reposicion y reutilizacion de la cisterna. Tambien se comprobaron 11 recorridos del menu, incluidos el de Diego, la falta de stock, dos plantas independientes, cambios de conexiones, consulta de recargas y fin de entrada. El programa y las tres pruebas C++ compilaron con `/W4 /WX`, sin advertencias.
 
 **Dato pendiente de reconciliar:** el CSV actual tiene 12000 litros de stock y 4000 reservados, pero los pedidos asignados D003 y D005 suman 12000. La preparacion inicial rechaza esta diferencia. Si las asignaciones reflejan la realidad, el total reservado tendria que coincidir con sus 12000 litros; si los 4000 son correctos, deben revisarse los pedidos. El equipo debe confirmar la fuente correcta: no se modificaron los CSV automaticamente.
 

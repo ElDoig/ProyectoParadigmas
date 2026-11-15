@@ -39,5 +39,17 @@ std::string registrarEntregaAgua(Pedido pedido, StockAgua* stock,
 // El llamador indica el tope de trabajo; no se inventa un limite en el CSV.
 std::string reponerAgua(StockAgua* stock, int litrosRecibidos, int topeStock);
 
+// Unimos los estados de Valentino con el agua; si algo falla, no cambiamos los datos.
+std::string asignarPedidoConAgua(std::string codigoPedido, std::string codigoUnidad,
+                                Pedido pedidos[], int cantidadPedidos,
+                                Unidad unidades[], int cantidadUnidades,
+                                StockAgua* stock, ReservaAgua reservas[],
+                                int* cantidadReservas, int capacidadReservas);
+
+std::string entregarPedidoConAgua(std::string codigoPedido,
+                                 Pedido pedidos[], int cantidadPedidos,
+                                 Unidad unidades[], int cantidadUnidades,
+                                 StockAgua* stock, ReservaAgua reservas[], int cantidadReservas);
+
 // 4.1.1 - Carlos Doig. Devuelve 0 al salir o 1 si la lectura de entrada falla.
 int ejecutarMenu();

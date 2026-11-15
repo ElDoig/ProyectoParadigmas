@@ -1,6 +1,8 @@
 #include <iostream>
 #include "tipos.h"
 #include "carlos.h"
+#include "diego.h"
+#include "valentino.h"
 
 // 4.1.3 - Carlos Doig: registros en memoria con validaciones.
 // El arreglo y su contador los recibe cada funcion; no hay datos globales.
@@ -348,6 +350,56 @@ std::string reponerAgua(StockAgua* stock, int litrosRecibidos, int topeStock) {
     return "";
 }
 
+// Preparamos el cambio en copias. Solo lo aplicamos si tambien se pudo reservar el agua.
+std::string asignarPedidoConAgua(std::string codigoPedido, std::string codigoUnidad,
+                                Pedido pedidos[], int cantidadPedidos,
+                                Unidad unidades[], int cantidadUnidades,
+                                StockAgua* stock, ReservaAgua reservas[],
+                                int* cantidadReservas, int capacidadReservas) {
+    int p = -1;
+    int u = -1;
+    std::string error = validarAsignacion(codigoPedido, codigoUnidad, pedidos, cantidadPedidos,
+                                         unidades, cantidadUnidades, &p, &u);
+    if (error != "") return error;
+
+    Pedido preparado[1] = {pedidos[p]};
+    Unidad preparada[1] = {unidades[u]};
+    error = asignarPedido(codigoPedido, codigoUnidad, preparado, 1, preparada, 1);
+    if (error != "") return error;
+    error = reservarAgua(pedidos[p], stock, reservas, cantidadReservas, capacidadReservas);
+    if (error != "") return error;
+
+    pedidos[p] = preparado[0];
+    unidades[u] = preparada[0];
+    return "";
+}
+
+std::string entregarPedidoConAgua(std::string codigoPedido,
+                                 Pedido pedidos[], int cantidadPedidos,
+                                 Unidad unidades[], int cantidadUnidades,
+                                 StockAgua* stock, ReservaAgua reservas[], int cantidadReservas) {
+    int p = -1;
+    int u = -1;
+    std::string error = validarEntrega(codigoPedido, pedidos, cantidadPedidos,
+                                      unidades, cantidadUnidades, &p, &u);
+    if (error != "") return error;
+    if (unidades[u].estado != EstadoUnidad::ocupada) {
+        return "La unidad del pedido asignado debe estar ocupada.";
+    }
+
+    Pedido preparado[1] = {pedidos[p]};
+    Unidad preparada[1] = {unidades[u]};
+    error = entregarPedido(codigoPedido, preparado, 1, preparada, 1);
+    if (error != "") return error;
+    // El pedido original sigue asignado cuando descontamos su reserva.
+    error = registrarEntregaAgua(pedidos[p], stock, reservas, cantidadReservas);
+    if (error != "") return error;
+
+    pedidos[p] = preparado[0];
+    unidades[u] = preparada[0];
+    return "";
+}
+
 // 4.1.1 - Carlos Doig. Guardamos la sesion en arreglos, sin cargar ni guardar CSV.
 // Estos tamanos son espacio de trabajo del menu, no limites nuevos del contrato.
 struct AguaPlantaMenu {
@@ -361,11 +413,15 @@ struct DatosMenu {
     Conexion conexiones[100];
     Unidad unidades[100];
     Pedido pedidos[100];
+    DimensionCisterna alturas[100];
+    RestriccionAltura restricciones[100];
     AguaPlantaMenu agua[10];
     int cantidadPuntos;
     int cantidadConexiones;
     int cantidadUnidades;
     int cantidadPedidos;
+    int cantidadAlturas;
+    int cantidadRestricciones;
     int cantidadPlantasAgua;
 };
 
@@ -539,7 +595,7 @@ bool menuAguaCarlos(DatosMenu* datos) {
     while (true) {
         std::cout << "\nCONTROL DE AGUA\n1. Iniciar stock de una planta\n2. Consultar agua libre\n"
                   << "3. Reponer agua\n0. Volver\n"
-                  << "Las reservas y entregas se conectaran con la gestion de pedidos.\nOpcion: ";
+                  << "Las reservas y entregas se realizan desde la opcion 2 del menu principal.\nOpcion: ";
         if (!(std::cin >> opcion)) return false;
         if (opcion == "0") return true;
         if (opcion == "1") {
@@ -552,12 +608,95 @@ bool menuAguaCarlos(DatosMenu* datos) {
     }
 }
 
+// El menu coordina ambas partes sin cambiar las funciones de Valentino.
+bool gestionarPedidoConAguaMenu(DatosMenu* datos, bool esEntrega) {
+    std::string pedido;
+    std::string unidad;
+    int p = -1;
+    int u = -1;
+    std::string error;
+    if (esEntrega) {
+        std::cout << "Codigo del pedido entregado: ";
+        if (!(std::cin >> pedido)) return false;
+        error = validarEntrega(pedido, datos->pedidos, datos->cantidadPedidos,
+                               datos->unidades, datos->cantidadUnidades, &p, &u);
+    } else {
+        std::cout << "Codigo del pedido y codigo de la cisterna.\nDatos: ";
+        if (!(std::cin >> pedido >> unidad)) return false;
+        error = validarAsignacion(pedido, unidad, datos->pedidos, datos->cantidadPedidos,
+                                  datos->unidades, datos->cantidadUnidades, &p, &u);
+    }
+    if (error != "") {
+        mostrarResultadoMenu(error, "");
+        return true;
+    }
+    int planta = buscarAguaPlantaMenu(datos->pedidos[p].origen, datos);
+    if (planta == -1) {
+        std::cout << "Primero inicia el stock de la planta de origen desde la opcion 4 del menu principal.\n";
+        return true;
+    }
+    if (esEntrega) {
+        error = entregarPedidoConAgua(pedido, datos->pedidos, datos->cantidadPedidos,
+                                      datos->unidades, datos->cantidadUnidades,
+                                      &datos->agua[planta].stock, datos->agua[planta].reservas,
+                                      datos->agua[planta].cantidadReservas);
+        mostrarResultadoMenu(error, "Pedido entregado, agua descontada y cisterna liberada.");
+    } else {
+        error = asignarPedidoConAgua(pedido, unidad, datos->pedidos, datos->cantidadPedidos,
+                                     datos->unidades, datos->cantidadUnidades,
+                                     &datos->agua[planta].stock, datos->agua[planta].reservas,
+                                     &datos->agua[planta].cantidadReservas, 100);
+        mostrarResultadoMenu(error, "Pedido asignado, agua reservada y cisterna ocupada.");
+    }
+    return true;
+}
+
+bool menuEstadosConAguaCarlos(DatosMenu* datos) {
+    std::string opcion;
+    while (true) {
+        std::cout << "\nGESTIONAR ESTADOS\n1. Cerrar o habilitar conexion\n2. Asignar pedido a cisterna\n"
+                  << "3. Marcar pedido como entregado\n4. Consultar necesidad de recargas\n0. Volver\nOpcion: ";
+        if (!(std::cin >> opcion)) return false;
+        if (opcion == "0") return true;
+        if (opcion == "1") {
+            std::string origen, destino, estado;
+            std::cout << "Origen destino nuevo_estado (habilitada, cerrada).\nDatos: ";
+            if (!(std::cin >> origen >> destino >> estado)) return false;
+            if (estado != "habilitada" && estado != "cerrada") {
+                std::cout << "Estado no valido. No se cambio la conexion.\n";
+            } else {
+                EstadoConexion nuevo = EstadoConexion::habilitada;
+                if (estado == "cerrada") nuevo = EstadoConexion::cerrada;
+                mostrarResultadoMenu(cambiarEstadoConexion(origen, destino, nuevo,
+                                     datos->conexiones, datos->cantidadConexiones),
+                                     "Estado de la conexion actualizado en memoria.");
+            }
+        } else if (opcion == "2" || opcion == "3") {
+            if (!gestionarPedidoConAguaMenu(datos, opcion == "3")) return false;
+        } else if (opcion == "4") {
+            std::string pedido, unidad;
+            int litros = 0;
+            int capacidad = 0;
+            std::cout << "Codigo del pedido y codigo de la cisterna.\nDatos: ";
+            if (!(std::cin >> pedido >> unidad)) return false;
+            std::string error = consultarPlanRecarga(pedido, unidad, datos->pedidos,
+                                datos->cantidadPedidos, datos->unidades, datos->cantidadUnidades,
+                                &litros, &capacidad);
+            if (error != "") mostrarResultadoMenu(error, "");
+            else std::cout << "Pedido: " << litros << " L. Cisterna: " << capacidad
+                           << " L. Requiere recargas; viajes, distancia y costo se calculan en Haskell.\n";
+        } else std::cout << "Opcion no valida.\n";
+    }
+}
+
 int ejecutarMenu() {
     DatosMenu datos;
     datos.cantidadPuntos = 0;
     datos.cantidadConexiones = 0;
     datos.cantidadUnidades = 0;
     datos.cantidadPedidos = 0;
+    datos.cantidadAlturas = 0;
+    datos.cantidadRestricciones = 0;
     datos.cantidadPlantasAgua = 0;
     std::cout << "Planificador de rutas y logistica - agua con cisternas\n"
               << "Sesion en memoria: los datos no se guardan al salir.\n"
@@ -567,18 +706,23 @@ int ejecutarMenu() {
     std::string opcion;
     bool entradaCorrecta = true;
     while (entradaCorrecta) {
-        std::cout << "\nMENU PRINCIPAL\n1. Registrar informacion\n2. Gestionar estados (pendiente)\n"
-                  << "3. Consultas generales y reporte (pendiente)\n4. Control de agua\n0. Salir\nOpcion: ";
+        std::cout << "\nMENU PRINCIPAL\n1. Registrar informacion\n2. Gestionar estados\n"
+                  << "3. Consultas generales y reporte\n4. Control de agua\n0. Salir\nOpcion: ";
         if (!(std::cin >> opcion)) entradaCorrecta = false;
         else if (opcion == "0") {
             std::cout << "Hasta luego.\n";
             return 0;
         } else if (opcion == "1") entradaCorrecta = menuRegistrosCarlos(&datos);
         else if (opcion == "4") entradaCorrecta = menuAguaCarlos(&datos);
-        else if (opcion == "2" || opcion == "3") {
-            // 4.1.4, 4.1.6 y 4.1.7 se conectan cuando sus responsables las implementen.
-            std::cout << "Esta opcion aun no esta disponible.\n";
-        } else std::cout << "Opcion no valida.\n";
+        else if (opcion == "3") {
+            // Diego consulta los mismos datos y actualiza sus contadores con los punteros.
+            entradaCorrecta = menuConsultasDiego(
+                datos.puntos, datos.cantidadPuntos, datos.conexiones, datos.cantidadConexiones,
+                datos.unidades, datos.cantidadUnidades, datos.pedidos, datos.cantidadPedidos,
+                datos.alturas, &datos.cantidadAlturas, 100,
+                datos.restricciones, &datos.cantidadRestricciones, 100);
+        } else if (opcion == "2") entradaCorrecta = menuEstadosConAguaCarlos(&datos);
+        else std::cout << "Opcion no valida.\n";
         // TODO 4.1.5 (Nicolas): guardar solo despues de operaciones exitosas.
     }
     // Sin clear/ignore ni un analizador propio: si cin falla, evitamos repetir el error en un bucle.
