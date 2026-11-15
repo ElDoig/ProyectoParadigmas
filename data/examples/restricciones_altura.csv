@@ -1,2 +1,5 @@
 origen,destino,altura_max_m
-P02,P04,3.2
+P06,P07,3.2
+P06,P03,3.6
+P07,P03,3.4
+P08,P09,3.0

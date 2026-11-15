@@ -1,0 +1,27 @@
+-- Prueba del reporte de pedidos de Diego con los datos de data/examples.
+import Carlos
+import Diego
+
+unidades :: [Unidad]
+unidades =
+  [ Unidad "U01" "cisterna" 10000 3.5 Disponible
+  , Unidad "U02" "cisterna" 7000 3.0 Ocupada
+  , Unidad "U03" "cisterna" 15000 4.5 Disponible
+  , Unidad "U04" "cisterna" 5000 2.5 Ocupada
+  ]
+
+pedidos :: [Pedido]
+pedidos =
+  [ Pedido "D001" "P01" "P03" 6000 Alta Pendiente ""
+  , Pedido "D002" "P01" "P05" 4000 Media Pendiente ""
+  , Pedido "D003" "P01" "P07" 7000 Alta Asignado "U02"
+  , Pedido "D004" "P01" "P08" 18000 Alta Pendiente ""
+  , Pedido "D005" "P01" "P09" 5000 Baja Asignado "U04"
+  , Pedido "D006" "P01" "P10" 3000 Alta Pendiente ""
+  , Pedido "D007" "P01" "P02" 8000 Media Entregado "U01"
+  , Pedido "D008" "P01" "P06" 9000 Baja Entregado "U03"
+  , Pedido "D009" "P01" "P04" 2500 Baja Entregado "U01"
+  ]
+
+main :: IO ()
+main = putStr (textoReportePedidos unidades pedidos)
