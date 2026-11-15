@@ -45,3 +45,10 @@ std::string consultarPasoAltura(std::string unidad, std::string origen, std::str
                                 DimensionCisterna alturas[], int cantidadAlturas,
                                 RestriccionAltura restricciones[], int cantidadRestricciones,
                                 bool* puedePasar);
+
+// Submenu de la opcion 3 del menu principal. Devuelve false si la lectura de entrada falla.
+bool menuConsultasDiego(Punto puntos[], int cantidadPuntos, Conexion conexiones[], int cantidadConexiones,
+                        Unidad unidades[], int cantidadUnidades, Pedido pedidos[], int cantidadPedidos,
+                        DimensionCisterna alturas[], int* cantidadAlturas, int capacidadAlturas,
+                        RestriccionAltura restricciones[], int* cantidadRestricciones,
+                        int capacidadRestricciones);

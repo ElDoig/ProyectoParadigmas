@@ -220,3 +220,73 @@ std::string consultarPasoAltura(std::string unidad, std::string origen, std::str
     }
     return "";
 }
+// Muestra el mensaje de exito o el error de una operacion del submenu.
+void mostrarResultadoDiego(std::string error, std::string mensaje) {
+    if (error == "") std::cout << mensaje << "\n";
+    else std::cout << "No se realizo la operacion: " << error << "\n";
+}
+
+bool menuConsultasDiego(Punto puntos[], int cantidadPuntos, Conexion conexiones[], int cantidadConexiones,
+                        Unidad unidades[], int cantidadUnidades, Pedido pedidos[], int cantidadPedidos,
+                        DimensionCisterna alturas[], int* cantidadAlturas, int capacidadAlturas,
+                        RestriccionAltura restricciones[], int* cantidadRestricciones,
+                        int capacidadRestricciones) {
+    std::string opcion;
+    while (true) {
+        std::cout << "\nCONSULTAS Y REPORTE\n1. Consultar punto\n2. Conexiones de un punto\n"
+                  << "3. Consultar pedido\n4. Pedidos por estado\n5. Reporte general\n"
+                  << "6. Registrar altura de cisterna\n7. Registrar limite de altura de via\n"
+                  << "8. Consultar si una cisterna pasa por una via\n0. Volver\nOpcion: ";
+        if (!(std::cin >> opcion)) return false;
+        if (opcion == "0") return true;
+
+        if (opcion == "1" || opcion == "2" || opcion == "3") {
+            std::string codigo;
+            std::cout << "Codigo: ";
+            if (!(std::cin >> codigo)) return false;
+            std::string error;
+            if (opcion == "1") error = consultarPunto(codigo, puntos, cantidadPuntos);
+            else if (opcion == "2") error = consultarConexionesDePunto(codigo, conexiones, cantidadConexiones);
+            else error = consultarPedido(codigo, pedidos, cantidadPedidos);
+            if (error != "") std::cout << error << "\n";
+        } else if (opcion == "4") {
+            std::string estado;
+            std::cout << "Estado (pendiente, asignado, entregado): ";
+            if (!(std::cin >> estado)) return false;
+            std::string error;
+            if (estado == "pendiente") error = consultarPedidosPorEstado(EstadoPedido::pendiente, pedidos, cantidadPedidos);
+            else if (estado == "asignado") error = consultarPedidosPorEstado(EstadoPedido::asignado, pedidos, cantidadPedidos);
+            else if (estado == "entregado") error = consultarPedidosPorEstado(EstadoPedido::entregado, pedidos, cantidadPedidos);
+            else error = "Estado no valido.";
+            if (error != "") std::cout << error << "\n";
+        } else if (opcion == "5") {
+            mostrarReporteGeneral(puntos, cantidadPuntos, conexiones, cantidadConexiones,
+                                  unidades, cantidadUnidades, pedidos, cantidadPedidos);
+        } else if (opcion == "6") {
+            DimensionCisterna nueva;
+            std::cout << "Codigo de cisterna y altura en metros.\nDatos: ";
+            if (!(std::cin >> nueva.unidad >> nueva.altura_m)) return false;
+            mostrarResultadoDiego(registrarAltura(nueva, alturas, cantidadAlturas, capacidadAlturas,
+                                                  unidades, cantidadUnidades),
+                                  "Altura registrada en memoria.");
+        } else if (opcion == "7") {
+            RestriccionAltura nueva;
+            std::cout << "Origen destino y altura maxima en metros.\nDatos: ";
+            if (!(std::cin >> nueva.origen >> nueva.destino >> nueva.altura_max_m)) return false;
+            mostrarResultadoDiego(registrarRestriccionAltura(nueva, restricciones, cantidadRestricciones,
+                                                             capacidadRestricciones, conexiones,
+                                                             cantidadConexiones),
+                                  "Limite de altura registrado en memoria.");
+        } else if (opcion == "8") {
+            std::string unidad, origen, destino;
+            bool puede = false;
+            std::cout << "Codigo de cisterna, origen y destino de la via.\nDatos: ";
+            if (!(std::cin >> unidad >> origen >> destino)) return false;
+            std::string error = consultarPasoAltura(unidad, origen, destino, alturas, *cantidadAlturas,
+                                                    restricciones, *cantidadRestricciones, &puede);
+            if (error != "") std::cout << error << "\n";
+            else if (puede) std::cout << unidad << " puede pasar por " << origen << "-" << destino << ".\n";
+            else std::cout << unidad << " no puede pasar por " << origen << "-" << destino << " por su altura.\n";
+        } else std::cout << "Opcion no valida.\n";
+    }
+}
