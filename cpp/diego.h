@@ -17,3 +17,31 @@ void mostrarReporteGeneral(Punto puntos[], int cantidadPuntos,
                            Conexion conexiones[], int cantidadConexiones,
                            Unidad unidades[], int cantidadUnidades,
                            Pedido pedidos[], int cantidadPedidos);
+
+
+// Adicional - Diego Rodriguez. Campos de dimensiones_cisternas.csv y restricciones_altura.csv.
+struct DimensionCisterna {
+    std::string unidad;
+    double altura_m;
+};
+
+struct RestriccionAltura {
+    std::string origen;
+    std::string destino;
+    double altura_max_m;
+};
+
+// Registra la altura de una cisterna existente; una sola altura por cisterna.
+std::string registrarAltura(DimensionCisterna nueva, DimensionCisterna alturas[], int* cantidad,
+                            int capacidad, Unidad unidades[], int cantidadUnidades);
+
+// Registra el limite de altura de una via existente; un solo limite por via.
+std::string registrarRestriccionAltura(RestriccionAltura nueva, RestriccionAltura restricciones[],
+                                       int* cantidad, int capacidad,
+                                       Conexion conexiones[], int cantidadConexiones);
+
+// Indica en puedePasar si la cisterna cabe por la via; una via sin limite no la restringe.
+std::string consultarPasoAltura(std::string unidad, std::string origen, std::string destino,
+                                DimensionCisterna alturas[], int cantidadAlturas,
+                                RestriccionAltura restricciones[], int cantidadRestricciones,
+                                bool* puedePasar);

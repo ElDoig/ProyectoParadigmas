@@ -143,3 +143,80 @@ void mostrarReporteGeneral(Punto puntos[], int cantidadPuntos,
               << asignados << ", entregados " << entregados << ", " << litrosPendientes
               << " litros pendientes)\n";
 }
+
+// Adicional - Diego Rodriguez: true si la via A-B coincide en cualquier sentido.
+bool mismaVia(std::string origen1, std::string destino1, std::string origen2, std::string destino2) {
+    return (origen1 == origen2 && destino1 == destino2) || (origen1 == destino2 && destino1 == origen2);
+}
+
+std::string registrarAltura(DimensionCisterna nueva, DimensionCisterna alturas[], int* cantidad,
+                            int capacidad, Unidad unidades[], int cantidadUnidades) {
+    if (alturas == nullptr || cantidad == nullptr) return "Falta el arreglo de alturas o su contador.";
+    if (capacidad < 0 || *cantidad < 0 || *cantidad > capacidad) {
+        return "El contador o la capacidad de alturas es incorrecto.";
+    }
+    if (*cantidad == capacidad) return "No hay espacio para otra altura.";
+    if (!(nueva.altura_m > 0)) return "La altura debe ser mayor que cero.";
+    bool existe = false;
+    for (int i = 0; i < cantidadUnidades; i++) {
+        if (unidades[i].codigo == nueva.unidad) existe = true;
+    }
+    if (!existe) return "La cisterna debe estar registrada.";
+    for (int i = 0; i < *cantidad; i++) {
+        if (alturas[i].unidad == nueva.unidad) return "Esa cisterna ya tiene una altura registrada.";
+    }
+
+    alturas[*cantidad] = nueva;
+    *cantidad = *cantidad + 1;
+    return "";
+}
+
+std::string registrarRestriccionAltura(RestriccionAltura nueva, RestriccionAltura restricciones[],
+                                       int* cantidad, int capacidad,
+                                       Conexion conexiones[], int cantidadConexiones) {
+    if (restricciones == nullptr || cantidad == nullptr) {
+        return "Falta el arreglo de restricciones o su contador.";
+    }
+    if (capacidad < 0 || *cantidad < 0 || *cantidad > capacidad) {
+        return "El contador o la capacidad de restricciones es incorrecto.";
+    }
+    if (*cantidad == capacidad) return "No hay espacio para otra restriccion.";
+    if (!(nueva.altura_max_m > 0)) return "La altura maxima debe ser mayor que cero.";
+    bool existe = false;
+    for (int i = 0; i < cantidadConexiones; i++) {
+        if (mismaVia(conexiones[i].origen, conexiones[i].destino, nueva.origen, nueva.destino)) {
+            existe = true;
+        }
+    }
+    if (!existe) return "La via debe ser una conexion registrada.";
+    for (int i = 0; i < *cantidad; i++) {
+        if (mismaVia(restricciones[i].origen, restricciones[i].destino, nueva.origen, nueva.destino)) {
+            return "Esa via ya tiene un limite de altura.";
+        }
+    }
+
+    restricciones[*cantidad] = nueva;
+    *cantidad = *cantidad + 1;
+    return "";
+}
+
+std::string consultarPasoAltura(std::string unidad, std::string origen, std::string destino,
+                                DimensionCisterna alturas[], int cantidadAlturas,
+                                RestriccionAltura restricciones[], int cantidadRestricciones,
+                                bool* puedePasar) {
+    if (puedePasar == nullptr) return "Falta la variable del resultado.";
+    int posicion = -1;
+    for (int i = 0; i < cantidadAlturas; i++) {
+        if (alturas[i].unidad == unidad) posicion = i;
+    }
+    if (posicion == -1) return "Esa cisterna no tiene altura registrada.";
+
+    *puedePasar = true;
+    for (int i = 0; i < cantidadRestricciones; i++) {
+        if (mismaVia(restricciones[i].origen, restricciones[i].destino, origen, destino) &&
+            alturas[posicion].altura_m > restricciones[i].altura_max_m) {
+            *puedePasar = false;
+        }
+    }
+    return "";
+}
