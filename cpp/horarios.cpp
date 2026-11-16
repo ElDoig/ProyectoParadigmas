@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include "tipos.h"
+#include "diego.h"
 #include "horarios.h"
 #include "nicolas.h"
 

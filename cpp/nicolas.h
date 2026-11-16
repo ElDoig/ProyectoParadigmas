@@ -9,6 +9,8 @@
 // data/runtime guarda los datos de trabajo; data/examples los versionados.
 std::string rutaRuntime(std::string nombre);
 std::string rutaEjemplo(std::string nombre);
+// Devuelve la ruta de data/runtime si el archivo existe ahi; si no, la de data/examples.
+std::string rutaDisponible(std::string nombre);
 
 // Convierten texto a numero SIN lanzar excepciones: devuelven false si el
 // texto no es un numero o si el valor no cabe en el tipo.
@@ -41,3 +43,11 @@ std::string guardarDatos(Punto puntos[], int cantidadPuntos,
                          Conexion conexiones[], int cantidadConexiones,
                          Unidad unidades[], int cantidadUnidades,
                          Pedido pedidos[], int cantidadPedidos);
+
+// Archivos de la funcionalidad adicional de Diego (dimensiones_cisternas.csv y
+// restricciones_altura.csv). Incluir diego.h antes de este archivo.
+std::string cargarAlturas(std::string archivo, DimensionCisterna alturas[], int* cantidad, int capacidad);
+std::string cargarRestricciones(std::string archivo, RestriccionAltura restricciones[],
+                                int* cantidad, int capacidad);
+std::string guardarAlturas(std::string archivo, DimensionCisterna alturas[], int cantidad);
+std::string guardarRestricciones(std::string archivo, RestriccionAltura restricciones[], int cantidad);
