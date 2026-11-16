@@ -3,6 +3,8 @@
 #include "carlos.h"
 #include "diego.h"
 #include "valentino.h"
+#include "nicolas.h"
+#include "horarios.h"
 
 // 4.1.3 - Carlos Doig: registros en memoria con validaciones.
 // El arreglo y su contador los recibe cada funcion; no hay datos globales.
@@ -416,6 +418,8 @@ struct DatosMenu {
     DimensionCisterna alturas[100];
     RestriccionAltura restricciones[100];
     AguaPlantaMenu agua[10];
+    // FA - Nicolas Kou: horarios de recepcion de la sesion.
+    HorarioRecepcion horarios[100];
     int cantidadPuntos;
     int cantidadConexiones;
     int cantidadUnidades;
@@ -423,6 +427,7 @@ struct DatosMenu {
     int cantidadAlturas;
     int cantidadRestricciones;
     int cantidadPlantasAgua;
+    int cantidadHorarios;
 };
 
 void mostrarResultadoMenu(std::string error, std::string mensaje) {
@@ -689,6 +694,88 @@ bool menuEstadosConAguaCarlos(DatosMenu* datos) {
     }
 }
 
+// 4.1.2 - Nicolas Kou Acosta: carga inicial de los CSV al abrir el programa.
+// El stock de una planta solo se carga si sus reservas cuadran con los pedidos
+// asignados; si no cuadran se avisa y esa planta queda sin iniciar, para no
+// corregir los datos por nuestra cuenta.
+void cargarSesionNicolas(DatosMenu* datos) {
+    std::string error = cargarDatosIniciales(
+        datos->puntos, &datos->cantidadPuntos, 100,
+        datos->conexiones, &datos->cantidadConexiones, 100,
+        datos->unidades, &datos->cantidadUnidades, 100,
+        datos->pedidos, &datos->cantidadPedidos, 100);
+    if (error != "") {
+        std::cout << "No se pudo cargar la informacion guardada: " << error << "\n"
+                  << "La sesion empieza vacia.\n";
+        datos->cantidadPuntos = 0;
+        datos->cantidadConexiones = 0;
+        datos->cantidadUnidades = 0;
+        datos->cantidadPedidos = 0;
+        return;
+    }
+    std::cout << "Datos cargados: " << datos->cantidadPuntos << " puntos, "
+              << datos->cantidadConexiones << " conexiones, "
+              << datos->cantidadUnidades << " cisternas y "
+              << datos->cantidadPedidos << " pedidos.\n";
+
+    error = cargarHorarios(rutaRuntime("horarios_recepcion.csv"), datos->horarios,
+                           &datos->cantidadHorarios, 100);
+    if (error != "") {
+        error = cargarHorarios(rutaEjemplo("horarios_recepcion.csv"), datos->horarios,
+                               &datos->cantidadHorarios, 100);
+    }
+    if (error != "") std::cout << "Aviso de horarios: " << error << "\n";
+    else std::cout << "Horarios de recepcion cargados: " << datos->cantidadHorarios << ".\n";
+
+    StockAgua stocks[10];
+    int cantidadStocks = 0;
+    error = cargarStockAgua(rutaRuntime("stock_agua.csv"), stocks, &cantidadStocks, 10);
+    if (error != "") {
+        error = cargarStockAgua(rutaEjemplo("stock_agua.csv"), stocks, &cantidadStocks, 10);
+    }
+    if (error != "") {
+        std::cout << "Aviso de stock: " << error << "\n";
+        return;
+    }
+    for (int i = 0; i < cantidadStocks; i++) {
+        int posicion = datos->cantidadPlantasAgua;
+        datos->agua[posicion].cantidadReservas = 0;
+        std::string errorReservas = prepararReservasIniciales(
+            stocks[i], datos->pedidos, datos->cantidadPedidos,
+            datos->agua[posicion].reservas, &datos->agua[posicion].cantidadReservas, 100);
+        if (errorReservas != "") {
+            std::cout << "La planta " << stocks[i].punto_planta
+                      << " no se inicio: " << errorReservas << "\n"
+                      << "Revisa stock_agua.csv con el equipo o inicia el stock desde la opcion 4.\n";
+            datos->agua[posicion].cantidadReservas = 0;
+            continue;
+        }
+        datos->agua[posicion].stock = stocks[i];
+        datos->cantidadPlantasAgua = datos->cantidadPlantasAgua + 1;
+        std::cout << "Stock cargado para " << stocks[i].punto_planta << ".\n";
+    }
+}
+
+// 4.1.5 - Nicolas Kou Acosta: guarda la informacion despues de cada cambio.
+void guardarSesionNicolas(DatosMenu* datos) {
+    std::string error = guardarDatos(datos->puntos, datos->cantidadPuntos,
+                                     datos->conexiones, datos->cantidadConexiones,
+                                     datos->unidades, datos->cantidadUnidades,
+                                     datos->pedidos, datos->cantidadPedidos);
+    if (error != "") {
+        std::cout << "Aviso: no se pudo guardar. " << error << "\n";
+        return;
+    }
+    if (datos->cantidadPlantasAgua > 0) {
+        StockAgua stocks[10];
+        for (int i = 0; i < datos->cantidadPlantasAgua; i++) {
+            stocks[i] = datos->agua[i].stock;
+        }
+        error = guardarStockAgua(rutaRuntime("stock_agua.csv"), stocks, datos->cantidadPlantasAgua);
+        if (error != "") std::cout << "Aviso: no se pudo guardar el stock. " << error << "\n";
+    }
+}
+
 int ejecutarMenu() {
     DatosMenu datos;
     datos.cantidadPuntos = 0;
@@ -698,22 +785,28 @@ int ejecutarMenu() {
     datos.cantidadAlturas = 0;
     datos.cantidadRestricciones = 0;
     datos.cantidadPlantasAgua = 0;
+    datos.cantidadHorarios = 0;
     std::cout << "Planificador de rutas y logistica - agua con cisternas\n"
-              << "Sesion en memoria: los datos no se guardan al salir.\n"
               << "Escribe nombres sin espacios, por ejemplo Planta_Chillon.\n";
-    // TODO 4.1.2 (Nicolas): cargar los arreglos y preparar las reservas coherentes al iniciar.
+    cargarSesionNicolas(&datos);
 
     std::string opcion;
     bool entradaCorrecta = true;
     while (entradaCorrecta) {
         std::cout << "\nMENU PRINCIPAL\n1. Registrar informacion\n2. Gestionar estados\n"
-                  << "3. Consultas generales y reporte\n4. Control de agua\n0. Salir\nOpcion: ";
+                  << "3. Consultas generales y reporte\n4. Control de agua\n"
+                  << "5. Horarios de recepcion\n0. Salir\nOpcion: ";
         if (!(std::cin >> opcion)) entradaCorrecta = false;
         else if (opcion == "0") {
             std::cout << "Hasta luego.\n";
             return 0;
         } else if (opcion == "1") entradaCorrecta = menuRegistrosCarlos(&datos);
         else if (opcion == "4") entradaCorrecta = menuAguaCarlos(&datos);
+        else if (opcion == "5") {
+            // FA - Nicolas Kou: registro y consulta de horarios de recepcion.
+            entradaCorrecta = menuHorariosNicolas(datos.horarios, &datos.cantidadHorarios, 100,
+                                                  datos.puntos, datos.cantidadPuntos);
+        }
         else if (opcion == "3") {
             // Diego consulta los mismos datos y actualiza sus contadores con los punteros.
             entradaCorrecta = menuConsultasDiego(
@@ -723,7 +816,10 @@ int ejecutarMenu() {
                 datos.restricciones, &datos.cantidadRestricciones, 100);
         } else if (opcion == "2") entradaCorrecta = menuEstadosConAguaCarlos(&datos);
         else std::cout << "Opcion no valida.\n";
-        // TODO 4.1.5 (Nicolas): guardar solo despues de operaciones exitosas.
+        // 4.1.5 - Nicolas Kou: solo las opciones que cambian datos vuelven a guardar.
+        if (entradaCorrecta && (opcion == "1" || opcion == "2" || opcion == "4")) {
+            guardarSesionNicolas(&datos);
+        }
     }
     // Sin clear/ignore ni un analizador propio: si cin falla, evitamos repetir el error en un bucle.
     std::cout << "Fin de entrada o dato numerico invalido. La sesion termina sin guardar.\n";

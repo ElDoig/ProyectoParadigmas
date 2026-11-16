@@ -8,7 +8,10 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 - C++: opcion 3 conectada al submenu de Diego: consultas de puntos, conexiones y pedidos, reporte general, registro de alturas y limites de vias, y consulta de paso por altura.
 - Haskell: tipos de conexiones, unidades y pedidos (4.2.2 de Carlos), más un punto de entrada mínimo.
 - Prolog: lectura de los cuatro CSV base (4.3.1 de Carlos) y regla de atencion por disponibilidad y capacidad (4.3.5). Se puede consultar con codigos o proporcionar listas de datos.
-- La carga y el guardado CSV en C++, los calculos de Haskell y el adicional de Nicolas siguen pendientes de integracion en esta rama. La sesion C++ empieza vacia y sus datos no se conservan al salir. La consulta C++ de recargas solo indica si el pedido supera la capacidad; no calcula viajes, distancia ni costo.
+- C++: carga inicial de los CSV y guardado tras cada cambio (4.1.2 y 4.1.5 de Nicolas), y opcion 5 con el registro y la consulta de horarios de recepcion (adicional de Nicolas). La sesion ya no empieza vacia: lee `data/runtime/` y, si falta un archivo, toma la copia de `data/examples/`. Los cambios se guardan en `data/runtime/`.
+- Haskell: lectura de CSV y funcion de vecinos (4.2.1 y 4.2.3 de Nicolas), evaluacion de entregas dentro del horario de recepcion (adicional de Nicolas) y un menu en `Main.hs` con una opcion por integrante. La evaluacion usa las rutas reales de Valentino (4.2.4 y 4.2.5).
+- Prolog: regla de conexion directa `conectado/3` y `conectado/4` (4.3.2 de Nicolas), de la que dependen `alcanzable/2` y `pedidos_inaccesibles/1` de Valentino.
+- La consulta C++ de recargas solo indica si el pedido supera la capacidad; no calcula viajes, distancia ni costo.
 
 ## Archivos
 
@@ -19,7 +22,8 @@ Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas 
 | `cpp/carlos.h`, `cpp/carlos.cpp` | Menu, registros y adicional de stock y reservas. |
 | `cpp/diego.h`, `cpp/diego.cpp` | Consultas, reporte general y control de alturas de Diego. |
 | `cpp/valentino.h`, `cpp/valentino.cpp` | Funciones de estados y consulta de recargas de Valentino. El menu de Carlos coordina los estados con el agua. |
-| `cpp/nicolas.cpp` | Archivo reservado para Nicolas. |
+| `cpp/nicolas.h`, `cpp/nicolas.cpp` | Carga inicial y guardado de los CSV (4.1.2 y 4.1.5). |
+| `cpp/horarios.h`, `cpp/horarios.cpp` | Horarios de recepcion y su submenu (adicional de Nicolas). |
 | `haskell/Main.hs` | Punto de entrada de Haskell. |
 | `haskell/Carlos.hs` | Tipos y funciones de acceso a sus campos. |
 | `haskell/Nicolas.hs`, `haskell/Valentino.hs`, `haskell/Diego.hs` | Archivos de los demás integrantes. |
@@ -51,7 +55,7 @@ Con GCC:
 
 ```powershell
 New-Item -ItemType Directory -Force build | Out-Null
-g++ -std=c++17 -Wall -Wextra -pedantic cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/valentino.cpp cpp/diego.cpp -o build/planificador.exe
+g++ -std=c++17 -Wall -Wextra -pedantic cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/horarios.cpp cpp/valentino.cpp cpp/diego.cpp -o build/planificador.exe
 .\build\planificador.exe
 ```
 
@@ -59,7 +63,7 @@ Con MSVC, desde Developer PowerShell for Visual Studio:
 
 ```powershell
 New-Item -ItemType Directory -Force build | Out-Null
-cl /nologo /std:c++17 /EHsc /W4 cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/valentino.cpp cpp/diego.cpp /Fo:build\ /Fe:build\planificador.exe
+cl /nologo /std:c++17 /EHsc /W4 cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/horarios.cpp cpp/valentino.cpp cpp/diego.cpp /Fo:build\ /Fe:build\planificador.exe
 .\build\planificador.exe
 ```
 
@@ -71,6 +75,7 @@ cl /nologo /std:c++17 /EHsc /W4 cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/
 | 2 | Cerrar o habilitar conexiones, asignar y entregar pedidos con control de agua, y consultar necesidad de recargas. |
 | 3 | Submenu de Diego: consultas, reporte general, alturas de cisternas y limites de vias. |
 | 4 | Iniciar stock de una planta registrada, consultar agua libre y reponer agua. |
+| 5 | Registrar y consultar horarios de recepcion (adicional de Nicolas Kou). |
 | 0 | Salir. En los submenus, volver al menu principal. |
 
 La entrada usa `cin >>`: escribir cada campo sin espacios, por ejemplo `Planta_Chillon`, y los decimales con punto. El programa indica el orden de los campos. Las cisternas nuevas empiezan disponibles y los pedidos pendientes sin unidad; los errores de validacion se muestran y permiten seguir en el menu.
@@ -112,14 +117,14 @@ Registra dos puntos, una conexion, una cisterna y un pedido; inicia 12000 litros
 Con GCC:
 
 ```powershell
-g++ -std=c++17 -Wall -Wextra -pedantic tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp -o build/pruebas_registro.exe
+g++ -std=c++17 -Wall -Wextra -pedantic tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp -o build/pruebas_registro.exe
 .\build\pruebas_registro.exe
 ```
 
 Alternativa MSVC:
 
 ```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp /Fo:build\ /Fe:build\pruebas_registro.exe
+cl /nologo /std:c++17 /EHsc /W4 tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp /Fo:build\ /Fe:build\pruebas_registro.exe
 .\build\pruebas_registro.exe
 ```
 
@@ -163,14 +168,14 @@ El contrato no fija capacidad maxima para la planta. `topeStock` es un limite de
 Con GCC, despues de crear `build/`:
 
 ```powershell
-g++ -std=c++17 -Wall -Wextra -pedantic tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp -o build/pruebas_stock.exe
+g++ -std=c++17 -Wall -Wextra -pedantic tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp -o build/pruebas_stock.exe
 .\build\pruebas_stock.exe
 ```
 
 Alternativa MSVC:
 
 ```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp /Fo:build\ /Fe:build\pruebas_stock.exe
+cl /nologo /std:c++17 /EHsc /W4 tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp /Fo:build\ /Fe:build\pruebas_stock.exe
 .\build\pruebas_stock.exe
 ```
 
@@ -179,14 +184,14 @@ Resultado obtenido con MSVC: `80 pruebas de stock, 0 fallos.` Se usan estados ai
 Para comprobar la integracion entre estados y agua con GCC:
 
 ```powershell
-g++ -std=c++17 -Wall -Wextra -pedantic tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp -o build/pruebas_estados_agua.exe
+g++ -std=c++17 -Wall -Wextra -pedantic tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp -o build/pruebas_estados_agua.exe
 .\build\pruebas_estados_agua.exe
 ```
 
 Alternativa MSVC:
 
 ```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp /Fo:build\ /Fe:build\pruebas_estados_agua.exe
+cl /nologo /std:c++17 /EHsc /W4 tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp /Fo:build\ /Fe:build\pruebas_estados_agua.exe
 .\build\pruebas_estados_agua.exe
 ```
 
