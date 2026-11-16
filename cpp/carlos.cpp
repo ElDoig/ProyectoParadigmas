@@ -718,14 +718,30 @@ void cargarSesionNicolas(DatosMenu* datos) {
               << datos->cantidadUnidades << " cisternas y "
               << datos->cantidadPedidos << " pedidos.\n";
 
-    error = cargarHorarios(rutaRuntime("horarios_recepcion.csv"), datos->horarios,
+    // cargarHorarios no da error si el archivo no existe, asi que elegimos antes
+    // la ruta: data/runtime si ya existe y, si no, la copia de data/examples.
+    error = cargarHorarios(rutaDisponible("horarios_recepcion.csv"), datos->horarios,
                            &datos->cantidadHorarios, 100);
-    if (error != "") {
-        error = cargarHorarios(rutaEjemplo("horarios_recepcion.csv"), datos->horarios,
-                               &datos->cantidadHorarios, 100);
-    }
     if (error != "") std::cout << "Aviso de horarios: " << error << "\n";
     else std::cout << "Horarios de recepcion cargados: " << datos->cantidadHorarios << ".\n";
+
+    // FA - Diego Rodriguez: alturas de cisternas y limites de altura de las vias.
+    error = cargarAlturas(rutaDisponible("dimensiones_cisternas.csv"), datos->alturas,
+                          &datos->cantidadAlturas, 100);
+    if (error != "") {
+        std::cout << "Aviso de alturas: " << error << "\n";
+        datos->cantidadAlturas = 0;
+    }
+    error = cargarRestricciones(rutaDisponible("restricciones_altura.csv"), datos->restricciones,
+                                &datos->cantidadRestricciones, 100);
+    if (error != "") {
+        std::cout << "Aviso de restricciones de altura: " << error << "\n";
+        datos->cantidadRestricciones = 0;
+    }
+    if (datos->cantidadAlturas > 0 || datos->cantidadRestricciones > 0) {
+        std::cout << "Alturas cargadas: " << datos->cantidadAlturas << " | Limites de altura: "
+                  << datos->cantidadRestricciones << ".\n";
+    }
 
     StockAgua stocks[10];
     int cantidadStocks = 0;
@@ -765,6 +781,17 @@ void guardarSesionNicolas(DatosMenu* datos) {
     if (error != "") {
         std::cout << "Aviso: no se pudo guardar. " << error << "\n";
         return;
+    }
+    // FA - Diego Rodriguez: solo se guardan si hay datos, para no vaciar los archivos.
+    if (datos->cantidadAlturas > 0) {
+        error = guardarAlturas(rutaRuntime("dimensiones_cisternas.csv"), datos->alturas,
+                               datos->cantidadAlturas);
+        if (error != "") std::cout << "Aviso: no se pudieron guardar las alturas. " << error << "\n";
+    }
+    if (datos->cantidadRestricciones > 0) {
+        error = guardarRestricciones(rutaRuntime("restricciones_altura.csv"), datos->restricciones,
+                                     datos->cantidadRestricciones);
+        if (error != "") std::cout << "Aviso: no se pudieron guardar los limites de altura. " << error << "\n";
     }
     if (datos->cantidadPlantasAgua > 0) {
         StockAgua stocks[10];
@@ -817,7 +844,8 @@ int ejecutarMenu() {
         } else if (opcion == "2") entradaCorrecta = menuEstadosConAguaCarlos(&datos);
         else std::cout << "Opcion no valida.\n";
         // 4.1.5 - Nicolas Kou: solo las opciones que cambian datos vuelven a guardar.
-        if (entradaCorrecta && (opcion == "1" || opcion == "2" || opcion == "4")) {
+        // La opcion 3 tambien, porque ahi Diego registra alturas y limites de altura.
+        if (entradaCorrecta && (opcion == "1" || opcion == "2" || opcion == "3" || opcion == "4")) {
             guardarSesionNicolas(&datos);
         }
     }
