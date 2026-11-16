@@ -1,9 +1,9 @@
-#include <iostream>
 #include "tipos.h"
 #include "valentino.h"
 
 // 4.1.4 - Valentino Mantilla: gestion de estados (paradigma imperativo).
-
+// Las funciones no leen ni escriben en consola: el submenu "Gestionar estados"
+// de carlos.cpp las llama y une la asignacion y la entrega con el control de agua.
 
 // Buscamos el pedido por su codigo. Devuelve su posicion o -1.
 int buscarPedidoEstados(std::string codigo, Pedido pedidos[], int cantidad) {
@@ -181,98 +181,4 @@ std::string consultarPlanRecarga(std::string codigoPedido, std::string codigoUni
     *litrosPedido = pedidos[p].litros;
     *capacidadUnidad = unidades[u].capacidad_litros;
     return "";
-}
-
-// ---------------------------------------------------------------------
-// Submenu de gestion de estados (opcion 2 del menu principal)
-// Mismo estilo que los menus de carlos.cpp: palabras sin espacios con
-// cin y false si la lectura falla.
-// ---------------------------------------------------------------------
-void mostrarResultadoEstados(std::string error, std::string mensaje) {
-    if (error == "") std::cout << mensaje << "\n";
-    else std::cout << "No se realizo la operacion: " << error << "\n";
-}
-
-bool cambiarConexionMenu(Conexion conexiones[], int cantidadConexiones) {
-    std::string origen;
-    std::string destino;
-    std::string estado;
-    std::cout << "Origen destino nuevo_estado.\nEstados: habilitada, cerrada.\nDatos: ";
-    if (!(std::cin >> origen >> destino >> estado)) return false;
-    EstadoConexion nuevo;
-    if (estado == "habilitada") nuevo = EstadoConexion::habilitada;
-    else if (estado == "cerrada") nuevo = EstadoConexion::cerrada;
-    else {
-        std::cout << "Estado no valido. No se cambio la conexion.\n";
-        return true;
-    }
-    mostrarResultadoEstados(cambiarEstadoConexion(origen, destino, nuevo, conexiones, cantidadConexiones),
-                            "Estado de la conexion actualizado en memoria.");
-    return true;
-}
-
-bool asignarPedidoMenu(Pedido pedidos[], int cantidadPedidos,
-                       Unidad unidades[], int cantidadUnidades) {
-    std::string pedido;
-    std::string unidad;
-    std::cout << "Codigo del pedido y codigo de la unidad.\nDatos: ";
-    if (!(std::cin >> pedido >> unidad)) return false;
-    mostrarResultadoEstados(asignarPedido(pedido, unidad, pedidos, cantidadPedidos,
-                                          unidades, cantidadUnidades),
-                            "Pedido asignado y unidad marcada como ocupada.");
-    return true;
-}
-
-bool entregarPedidoMenu(Pedido pedidos[], int cantidadPedidos,
-                        Unidad unidades[], int cantidadUnidades) {
-    std::string pedido;
-    std::cout << "Codigo del pedido entregado: ";
-    if (!(std::cin >> pedido)) return false;
-    mostrarResultadoEstados(entregarPedido(pedido, pedidos, cantidadPedidos,
-                                           unidades, cantidadUnidades),
-                            "Pedido entregado y unidad liberada.");
-    return true;
-}
-
-bool consultarPlanMenu(Pedido pedidos[], int cantidadPedidos,
-                       Unidad unidades[], int cantidadUnidades) {
-    std::string pedido;
-    std::string unidad;
-    std::cout << "Codigo del pedido y codigo de la cisterna.\nDatos: ";
-    if (!(std::cin >> pedido >> unidad)) return false;
-    int litros = 0;
-    int capacidad = 0;
-    std::string error = consultarPlanRecarga(pedido, unidad, pedidos, cantidadPedidos,
-                                             unidades, cantidadUnidades, &litros, &capacidad);
-    if (error != "") {
-        mostrarResultadoEstados(error, "");
-        return true;
-    }
-    std::cout << "Pedido " << pedido << ": " << litros << " L. Cisterna " << unidad
-              << ": " << capacidad << " L.\n"
-              << "El pedido supera la capacidad: requiere plan de recarga.\n"
-              << "Los viajes, la distancia y el costo se calculan en el modulo Haskell (planRecarga).\n";
-    return true;
-}
-
-bool menuEstadosValentino(Conexion conexiones[], int cantidadConexiones,
-                          Pedido pedidos[], int cantidadPedidos,
-                          Unidad unidades[], int cantidadUnidades) {
-    std::string opcion;
-    while (true) {
-        std::cout << "\nGESTIONAR ESTADOS\n1. Cerrar o habilitar conexion\n2. Asignar pedido a cisterna\n"
-                  << "3. Marcar pedido como entregado\n4. Consultar plan de recarga (adicional)\n"
-                  << "0. Volver\nOpcion: ";
-        if (!(std::cin >> opcion)) return false;
-        if (opcion == "0") return true;
-        if (opcion == "1") {
-            if (!cambiarConexionMenu(conexiones, cantidadConexiones)) return false;
-        } else if (opcion == "2") {
-            if (!asignarPedidoMenu(pedidos, cantidadPedidos, unidades, cantidadUnidades)) return false;
-        } else if (opcion == "3") {
-            if (!entregarPedidoMenu(pedidos, cantidadPedidos, unidades, cantidadUnidades)) return false;
-        } else if (opcion == "4") {
-            if (!consultarPlanMenu(pedidos, cantidadPedidos, unidades, cantidadUnidades)) return false;
-        } else std::cout << "Opcion no valida.\n";
-    }
 }
