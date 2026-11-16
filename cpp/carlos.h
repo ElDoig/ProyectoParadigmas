@@ -51,5 +51,5 @@ std::string entregarPedidoConAgua(std::string codigoPedido,
                                  Unidad unidades[], int cantidadUnidades,
                                  StockAgua* stock, ReservaAgua reservas[], int cantidadReservas);
 
-// 4.1.1 - Carlos Doig. Devuelve 0 al salir o 1 si la lectura de entrada falla.
+// 4.1.1 - Carlos Doig. 0: salir; 1: entrada invalida; 2: error de carga o guardado.
 int ejecutarMenu();
