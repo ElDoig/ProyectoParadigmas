@@ -6,8 +6,8 @@
 #include <sstream>
 #include <iomanip>
 #include "tipos.h"
-#include "nicolas.h"
 #include "diego.h"
+#include "nicolas.h"
 
 using namespace std;
 
@@ -321,6 +321,76 @@ string cargarPedidos(string archivo, Pedido pedidos[], int* cantidad, int capaci
     return "";
 }
 
+// Archivos de la funcionalidad adicional de Diego: misma forma de lectura que los demas.
+string cargarAlturas(string archivo, DimensionCisterna alturas[], int* cantidad, int capacidad) {
+    if (alturas == nullptr || cantidad == nullptr) return "Falta el arreglo de alturas o su contador.";
+    ifstream entrada;
+    string error = abrirConCabecera(&entrada, archivo, "unidad,altura_m");
+    if (error != "") return error;
+
+    *cantidad = 0;
+    string linea;
+    int numeroLinea = 1;
+    while (getline(entrada, linea)) {
+        numeroLinea++;
+        if (limpiarCampo(linea) == "") continue;
+        if (*cantidad == capacidad) {
+            entrada.close();
+            return "El archivo tiene mas alturas que el espacio disponible.";
+        }
+        string campos[2];
+        if (separarCampos(linea, campos, 2) != 2) {
+            entrada.close();
+            return "La linea " + to_string(numeroLinea) + " de " + archivo + " no tiene 2 campos.";
+        }
+        DimensionCisterna nueva;
+        nueva.unidad = campos[0];
+        if (nueva.unidad == "" || !textoADecimal(campos[1], &nueva.altura_m)) {
+            entrada.close();
+            return "La linea " + to_string(numeroLinea) + " de " + archivo + " tiene datos invalidos.";
+        }
+        alturas[*cantidad] = nueva;
+        *cantidad = *cantidad + 1;
+    }
+    entrada.close();
+    return "";
+}
+
+string cargarRestricciones(string archivo, RestriccionAltura restricciones[], int* cantidad, int capacidad) {
+    if (restricciones == nullptr || cantidad == nullptr) return "Falta el arreglo de restricciones o su contador.";
+    ifstream entrada;
+    string error = abrirConCabecera(&entrada, archivo, "origen,destino,altura_max_m");
+    if (error != "") return error;
+
+    *cantidad = 0;
+    string linea;
+    int numeroLinea = 1;
+    while (getline(entrada, linea)) {
+        numeroLinea++;
+        if (limpiarCampo(linea) == "") continue;
+        if (*cantidad == capacidad) {
+            entrada.close();
+            return "El archivo tiene mas restricciones que el espacio disponible.";
+        }
+        string campos[3];
+        if (separarCampos(linea, campos, 3) != 3) {
+            entrada.close();
+            return "La linea " + to_string(numeroLinea) + " de " + archivo + " no tiene 3 campos.";
+        }
+        RestriccionAltura nueva;
+        nueva.origen = campos[0];
+        nueva.destino = campos[1];
+        if (nueva.origen == "" || nueva.destino == "" || !textoADecimal(campos[2], &nueva.altura_max_m)) {
+            entrada.close();
+            return "La linea " + to_string(numeroLinea) + " de " + archivo + " tiene datos invalidos.";
+        }
+        restricciones[*cantidad] = nueva;
+        *cantidad = *cantidad + 1;
+    }
+    entrada.close();
+    return "";
+}
+
 string cargarStockAgua(string archivo, StockAgua stocks[], int* cantidad, int capacidad) {
     if (stocks == nullptr || cantidad == nullptr) return "Falta el arreglo de stock o su contador.";
     ifstream entrada;
@@ -420,6 +490,31 @@ string guardarStockAgua(string archivo, StockAgua stocks[], int cantidad) {
     for (int i = 0; i < cantidad; i++) {
         salida << stocks[i].punto_planta << "," << stocks[i].litros_stock << ","
                << stocks[i].litros_reservados << "\n";
+    }
+    salida.close();
+    return "";
+}
+
+string guardarAlturas(string archivo, DimensionCisterna alturas[], int cantidad) {
+    if (cantidad > 0 && alturas == nullptr) return "Falta el arreglo de alturas.";
+    ofstream salida(archivo.c_str());
+    if (!salida.is_open()) return "No se pudo escribir " + archivo;
+    salida << "unidad,altura_m\n";
+    for (int i = 0; i < cantidad; i++) {
+        salida << alturas[i].unidad << "," << textoDecimal(alturas[i].altura_m) << "\n";
+    }
+    salida.close();
+    return "";
+}
+
+string guardarRestricciones(string archivo, RestriccionAltura restricciones[], int cantidad) {
+    if (cantidad > 0 && restricciones == nullptr) return "Falta el arreglo de restricciones.";
+    ofstream salida(archivo.c_str());
+    if (!salida.is_open()) return "No se pudo escribir " + archivo;
+    salida << "origen,destino,altura_max_m\n";
+    for (int i = 0; i < cantidad; i++) {
+        salida << restricciones[i].origen << "," << restricciones[i].destino << ","
+               << textoDecimal(restricciones[i].altura_max_m) << "\n";
     }
     salida.close();
     return "";
