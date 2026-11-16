@@ -3,6 +3,8 @@
 
   Lee los CSV de data/runtime/ (escritos por C++) y ofrece un menu con
   las funciones de cada integrante. Haskell solo lee: nunca escribe CSV.
+  Si un archivo todavia no existe en data/runtime/, usa la copia de
+  data/examples/, igual que la carga inicial de C++ (rutaDisponible).
 
   Ejecutar desde la raiz del repositorio:
       runghc -ihaskell haskell/Main.hs
@@ -18,43 +20,65 @@ import Nicolas
 import Valentino
 import Diego
 
-carpetaDatos :: String
-carpetaDatos = "data/runtime/"
+carpetaRuntime :: String
+carpetaRuntime = "data/runtime/"
+
+carpetaEjemplos :: String
+carpetaEjemplos = "data/examples/"
+
+-- Igual que rutaDisponible en C++: data/runtime si el archivo ya existe ahi;
+-- si no, la copia de data/examples; Nothing si no esta en ninguna de las dos.
+rutaDisponible :: String -> IO (Maybe String)
+rutaDisponible nombre = do
+  enRuntime  <- doesFileExist (carpetaRuntime ++ nombre)
+  enEjemplos <- doesFileExist (carpetaEjemplos ++ nombre)
+  return (elegirRuta nombre enRuntime enEjemplos)
+
+-- Parte pura de la eleccion, con guardas.
+elegirRuta :: String -> Bool -> Bool -> Maybe String
+elegirRuta nombre enRuntime enEjemplos
+  | enRuntime  = Just (carpetaRuntime ++ nombre)
+  | enEjemplos = Just (carpetaEjemplos ++ nombre)
+  | otherwise  = Nothing
 
 main :: IO ()
 main = do
-  let archivos = map (carpetaDatos ++)
-                     ["conexiones.csv", "unidades.csv", "pedidos.csv", "horarios_recepcion.csv"]
-  faltantes <- archivosFaltantes archivos
-  if not (null faltantes)
-    then do
-      putStrLn "No se encontraron estos archivos:"
-      mapM_ (\a -> putStrLn ("  " ++ a)) faltantes
-      putStrLn "Copia los CSV de data/examples a data/runtime antes de ejecutar."
-    else do
-      textoConexiones <- readFile (carpetaDatos ++ "conexiones.csv")
-      textoUnidades   <- readFile (carpetaDatos ++ "unidades.csv")
-      textoPedidos    <- readFile (carpetaDatos ++ "pedidos.csv")
-      textoHorarios   <- readFile (carpetaDatos ++ "horarios_recepcion.csv")
+  rutaConexiones <- rutaDisponible "conexiones.csv"
+  rutaUnidades   <- rutaDisponible "unidades.csv"
+  rutaPedidos    <- rutaDisponible "pedidos.csv"
+  rutaHorarios   <- rutaDisponible "horarios_recepcion.csv"
+  case (rutaConexiones, rutaUnidades, rutaPedidos) of
+    (Just c, Just u, Just p) -> iniciar c u p rutaHorarios
+    _ -> do
+      putStrLn "No se encontraron conexiones.csv, unidades.csv o pedidos.csv"
+      putStrLn "ni en data/runtime/ ni en data/examples/."
+      putStrLn "Ejecuta el programa desde la raiz del repositorio."
 
-      let conexiones = leerConexiones textoConexiones
-      let unidades   = leerUnidades textoUnidades
-      let pedidos    = leerPedidos textoPedidos
-      let horarios   = leerHorarios textoHorarios
+-- Los horarios son de la funcionalidad adicional: si no hay archivo, la
+-- lista queda vacia y el resto del modulo funciona igual.
+leerOpcional :: Maybe String -> IO String
+leerOpcional Nothing      = return ""
+leerOpcional (Just ruta)  = readFile ruta
 
-      putStrLn "Modulo Haskell: calculos de rutas, costos y reportes."
-      putStrLn ("Conexiones: " ++ show (length conexiones)
-                ++ " | Cisternas: " ++ show (length unidades)
-                ++ " | Pedidos: " ++ show (length pedidos)
-                ++ " | Horarios: " ++ show (length horarios))
-      menu conexiones unidades pedidos horarios
+iniciar :: String -> String -> String -> Maybe String -> IO ()
+iniciar rutaConexiones rutaUnidades rutaPedidos rutaHorarios = do
+  textoConexiones <- readFile rutaConexiones
+  textoUnidades   <- readFile rutaUnidades
+  textoPedidos    <- readFile rutaPedidos
+  textoHorarios   <- leerOpcional rutaHorarios
 
-archivosFaltantes :: [String] -> IO [String]
-archivosFaltantes [] = return []
-archivosFaltantes (a:as) = do
-  existe <- doesFileExist a
-  resto <- archivosFaltantes as
-  if existe then return resto else return (a : resto)
+  let conexiones = leerConexiones textoConexiones
+  let unidades   = leerUnidades textoUnidades
+  let pedidos    = leerPedidos textoPedidos
+  let horarios   = leerHorarios textoHorarios
+
+  putStrLn "Modulo Haskell: calculos de rutas, costos y reportes."
+  putStrLn ("Pedidos leidos de: " ++ rutaPedidos)
+  putStrLn ("Conexiones: " ++ show (length conexiones)
+            ++ " | Cisternas: " ++ show (length unidades)
+            ++ " | Pedidos: " ++ show (length pedidos)
+            ++ " | Horarios: " ++ show (length horarios))
+  menu conexiones unidades pedidos horarios
 
 menu :: [Conexion] -> [Unidad] -> [Pedido] -> [Horario] -> IO ()
 menu conexiones unidades pedidos horarios = do
@@ -65,6 +89,7 @@ menu conexiones unidades pedidos horarios = do
   putStrLn "3. Reporte de pedidos (4.2.6)"
   putStrLn "4. Evaluar entregas dentro del horario de recepcion (FA Nicolas Kou)"
   putStrLn "5. Plan de recarga de un pedido grande (FA Valentino Mantilla)"
+  putStrLn "6. Resumen general: pedidos, rutas y costos (4.2.7)"
   putStrLn "0. Salir"
   putStr "Opcion: "
   hFlush stdout
@@ -80,6 +105,8 @@ menu conexiones unidades pedidos horarios = do
     "4" -> do opcionHorarios conexiones pedidos horarios
               menu conexiones unidades pedidos horarios
     "5" -> do opcionPlan conexiones unidades pedidos
+              menu conexiones unidades pedidos horarios
+    "6" -> do putStr (textoResumenGeneral conexiones unidades pedidos)
               menu conexiones unidades pedidos horarios
     _   -> do putStrLn "Opcion no valida."
               menu conexiones unidades pedidos horarios
