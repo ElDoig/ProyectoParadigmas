@@ -38,9 +38,3 @@ std::string consultarPlanRecarga(std::string codigoPedido, std::string codigoUni
                                  Pedido pedidos[], int cantidadPedidos,
                                  Unidad unidades[], int cantidadUnidades,
                                  int* litrosPedido, int* capacidadUnidad);
-
-// Submenu de la opcion 2 del menu principal (Gestionar estados).
-// Devuelve false si la lectura de entrada falla, como los menus de Carlos.
-bool menuEstadosValentino(Conexion conexiones[], int cantidadConexiones,
-                          Pedido pedidos[], int cantidadPedidos,
-                          Unidad unidades[], int cantidadUnidades);
