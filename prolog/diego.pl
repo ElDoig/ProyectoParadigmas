@@ -3,7 +3,7 @@
 :- encoding(utf8).
 
 :- use_module(library(csv)).
-:- use_module(carlos,  [leer_datos/4]).
+:- use_module(carlos,  [leer_datos/4, ruta_disponible/2]).
 :- use_module(nicolas, [conectado/4]).
 
 % 4.3.4 (Diego Rodriguez): ruta de Origen a Destino que no pasa por Evitar.
@@ -30,11 +30,14 @@ recorrido(Actual, Destino, Evitar, Visitados, Conexiones, Ruta) :-
     recorrido(Siguiente, Destino, Evitar, [Siguiente|Visitados], Conexiones, Ruta).
 
 % Adicional (Diego Rodriguez): lee alturas de cisternas y limites de altura de vias.
+% ruta_disponible (Carlos) elige data/runtime o, si aun no existe, data/examples.
 leer_alturas(Alturas, Limites) :-
-    csv_read_file('data/runtime/dimensiones_cisternas.csv', FilasA,
+    ruta_disponible('dimensiones_cisternas.csv', RutaAlturas),
+    ruta_disponible('restricciones_altura.csv', RutaLimites),
+    csv_read_file(RutaAlturas, FilasA,
                   [functor(altura), arity(2), encoding(utf8)]),
     FilasA = [altura(unidad, altura_m)|Alturas],
-    csv_read_file('data/runtime/restricciones_altura.csv', FilasL,
+    csv_read_file(RutaLimites, FilasL,
                   [functor(limite), arity(3), encoding(utf8)]),
     FilasL = [limite(origen, destino, altura_max_m)|Limites].
 
