@@ -1,63 +1,85 @@
 # Planificador de rutas y logística: agua con cisternas
 
-Proyecto de Paradigmas de Programación para el abastecimiento de agua en Comas y Carabayllo. C++ gestiona los datos, Haskell realiza cálculos y Prolog responde consultas. Los módulos se comunicarán mediante CSV.
+Proyecto de Paradigmas de Programación (grupo 1) para el abastecimiento de agua con camiones cisterna en Comas y Carabayllo. C++ registra y gestiona los datos, Haskell calcula rutas, costos y reportes, y Prolog responde consultas con reglas. Los tres módulos se comunican mediante archivos CSV: C++ los escribe y Haskell y Prolog los leen.
 
-## Estado actual
+Integrantes: Carlos Doig, Nicolás Kou, Valentino Mantilla y Diego Rodríguez.
 
-- C++: menu de Carlos (4.1.1) con registro por consola de puntos, conexiones, cisternas y pedidos (4.1.3), inicio de stock por planta, consulta de agua libre y reposiciones. La opcion 2 integra los estados de Valentino con las reservas y entregas de agua de Carlos.
-- C++: opcion 3 conectada al submenu de Diego: consultas de puntos, conexiones y pedidos, reporte general, registro de alturas y limites de vias, y consulta de paso por altura.
-- Haskell: tipos de conexiones, unidades y pedidos (4.2.2 de Carlos), más un punto de entrada mínimo.
-- Prolog: lectura de los cuatro CSV base (4.3.1 de Carlos) y regla de atencion por disponibilidad y capacidad (4.3.5). Se puede consultar con codigos o proporcionar listas de datos.
-- C++: carga inicial de los CSV y guardado tras cada cambio (4.1.2 y 4.1.5 de Nicolas), y opcion 5 con el registro y la consulta de horarios de recepcion (adicional de Nicolas). La sesion ya no empieza vacia: lee `data/runtime/` y, si falta un archivo, toma la copia de `data/examples/`. Los cambios se guardan en `data/runtime/`.
-- Haskell: lectura de CSV y funcion de vecinos (4.2.1 y 4.2.3 de Nicolas), evaluacion de entregas dentro del horario de recepcion (adicional de Nicolas) y un menu en `Main.hs` con una opcion por integrante. La evaluacion usa las rutas reales de Valentino (4.2.4 y 4.2.5).
-- Prolog: regla de conexion directa `conectado/3` y `conectado/4` (4.3.2 de Nicolas), de la que dependen `alcanzable/2` y `pedidos_inaccesibles/1` de Valentino.
-- La consulta C++ de recargas solo indica si el pedido supera la capacidad; no calcula viajes, distancia ni costo.
+## Funcionalidades por integrante
+
+### Funcionalidades base
+
+| Módulo | Carlos Doig | Nicolás Kou | Valentino Mantilla | Diego Rodríguez |
+| --- | --- | --- | --- | --- |
+| C++ | 4.1.1 Menú y 4.1.3 Registro con validaciones | 4.1.2 Carga inicial de CSV y 4.1.5 Guardado de CSV | 4.1.4 Gestión de estados | 4.1.6 Consultas y 4.1.7 Reporte general |
+| Haskell | 4.2.2 Tipos | 4.2.1 Lectura de CSV y 4.2.3 Vecinos | 4.2.4 Rutas posibles y 4.2.5 Costo de ruta | 4.2.6 Reporte de pedidos y 4.2.7 Resultado esperado |
+| Prolog | 4.3.1 Lectura de CSV y 4.3.5 `puede_atender` | 4.3.2 `conectado` | 4.3.3 `alcanzable` y 4.3.6 `pedidos_inaccesibles` | 4.3.4 `ruta_evitando` |
+
+### Funcionalidades adicionales
+
+| Autor | Funcionalidad | Lenguajes | Dónde se prueba |
+| --- | --- | --- | --- |
+| Carlos Doig | Control de stock y reserva de agua en la planta | C++ | Opción 2 (asignar y entregar) y opción 4 (agua) |
+| Nicolás Kou | Evaluación de entregas dentro del horario de recepción | C++, Haskell | C++ opción 5; Haskell opción 4 |
+| Valentino Mantilla | Plan de recarga para un pedido de gran volumen | C++, Haskell | C++ opción 2 → 4; Haskell opción 5 |
+| Diego Rodríguez | Compatibilidad de cisternas según restricciones de altura | C++, Prolog | C++ opción 3 → 6, 7 y 8; Prolog `ruta_compatible` y relacionadas |
+
+En el código, cada parte está identificada con un comentario que indica el número de la funcionalidad o `FA` y su autor.
 
 ## Archivos
 
 | Ruta | Contenido |
 | --- | --- |
-| `cpp/main.cpp` | Punto de entrada; llama al menu de Carlos. |
+| `cpp/main.cpp` | Punto de entrada; llama al menú de Carlos. |
 | `cpp/tipos.h` | Estructuras y enumeraciones compartidas. |
-| `cpp/carlos.h`, `cpp/carlos.cpp` | Menu, registros y adicional de stock y reservas. |
-| `cpp/diego.h`, `cpp/diego.cpp` | Consultas, reporte general y control de alturas de Diego. |
-| `cpp/valentino.h`, `cpp/valentino.cpp` | Funciones de estados y consulta de recargas de Valentino. El menu de Carlos coordina los estados con el agua. |
-| `cpp/nicolas.h`, `cpp/nicolas.cpp` | Carga inicial y guardado de los CSV (4.1.2 y 4.1.5). |
-| `cpp/horarios.h`, `cpp/horarios.cpp` | Horarios de recepcion y su submenu (adicional de Nicolas). |
-| `haskell/Main.hs` | Punto de entrada de Haskell. |
+| `cpp/carlos.h`, `cpp/carlos.cpp` | Menú, registros, stock y reservas, y unión de los estados con el agua. |
+| `cpp/nicolas.h`, `cpp/nicolas.cpp` | Carga inicial y guardado de los CSV. |
+| `cpp/horarios.h`, `cpp/horarios.cpp` | Horarios de recepción y su submenú (adicional de Nicolás). |
+| `cpp/valentino.h`, `cpp/valentino.cpp` | Gestión de estados y consulta del plan de recarga. |
+| `cpp/diego.h`, `cpp/diego.cpp` | Consultas, reporte general y control de alturas. |
+| `haskell/Main.hs` | Punto de entrada y menú del módulo Haskell. |
 | `haskell/Carlos.hs` | Tipos y funciones de acceso a sus campos. |
-| `haskell/Nicolas.hs`, `haskell/Valentino.hs`, `haskell/Diego.hs` | Archivos de los demás integrantes. |
-| `prolog/main.pl` y archivos por integrante | Punto de carga y predicados; `carlos.pl` lee los CSV y define `puede_atender/2` y `puede_atender/4`. |
+| `haskell/Nicolas.hs` | Lectura de CSV, vecinos y evaluación de horarios. |
+| `haskell/Valentino.hs` | Rutas posibles, costo de ruta y plan de recarga. |
+| `haskell/Diego.hs` | Reporte de pedidos y resumen general. |
+| `prolog/main.pl` | Punto de carga; deja disponibles las reglas de todos los integrantes. |
+| `prolog/carlos.pl`, `prolog/nicolas.pl`, `prolog/valentino.pl`, `prolog/diego.pl` | Reglas de cada integrante. |
 | `data/examples/` | Ocho CSV de prueba versionados. |
-| `data/runtime/` | Datos locales de ejecución, ignorados por Git. |
-| `tests/registro_carlos.cpp` | Pruebas de las funciones de registro. |
-| `tests/stock_carlos.cpp` | Pruebas de stock, reservas, entregas y reposiciones. |
-| `tests/estados_agua_carlos.cpp` | Pruebas de asignacion y entrega coordinadas con el agua. |
-| `tests/datos_menu/recorrido.txt` | Entradas para repetir un recorrido del menu sin modificar archivos CSV. |
-| `tests/datos_menu/consultas_diego.txt` | Recorrido de registros, consultas, reporte y alturas desde la opcion 3. |
-| `tests/datos_menu/estados_agua.txt` | Recorrido de asignacion, reserva, entrega y reposicion desde el menu. |
-| `tests/atencion_carlos.pl` | Datos aislados y pruebas de la regla de atencion. |
-| `tests/lectura_carlos.pl`, `tests/datos_csv/` | Pruebas de lectura y archivos pequenos para comprobar cabeceras. |
+| `data/runtime/` | Datos de trabajo que escribe C++; ignorados por Git. |
+| `tests/` | Pruebas automáticas de Carlos (C++ y Prolog). |
+
+## Datos: `data/runtime` y `data/examples`
+
+Los tres módulos siguen la misma regla para leer cada archivo: si existe en `data/runtime/`, usan ese; si no, usan la copia de `data/examples/`. C++ guarda siempre en `data/runtime/` después de cada operación que cambia datos. Así, Haskell y Prolog leen lo último que guardó C++, y un repositorio recién clonado funciona sin preparar nada.
+
+Los datos de ejemplo tienen 10 puntos, 14 conexiones (2 cerradas), 4 cisternas y 9 pedidos, además de los archivos de las funcionalidades adicionales: `stock_agua.csv`, `horarios_recepcion.csv`, `dimensiones_cisternas.csv` y `restricciones_altura.csv`.
+
+Para volver a los datos iniciales, borrar los CSV de trabajo (se conserva `.gitkeep`):
+
+```powershell
+Remove-Item data\runtime\*.csv -ErrorAction SilentlyContinue
+```
 
 ## Preparar Windows
 
 Se necesitan un compilador C++17, GHC y SWI-Prolog. No hay dependencias externas del proyecto.
 
-- C++: con [MSYS2 UCRT64](https://www.msys2.org/), instalar GCC mediante `pacman -S mingw-w64-ucrt-x86_64-gcc`. Para usarlo desde PowerShell, añadir `C:\msys64\ucrt64\bin` al PATH si se usó la instalación predeterminada. Como alternativa, usar las herramientas C++ de Visual Studio.
-- Haskell: instalar GHC siguiendo la [guía de GHCup para Windows](https://www.haskell.org/ghcup/install/).
-- Prolog: instalar [SWI-Prolog](https://www.swi-prolog.org/download/stable) y habilitar su acceso desde el PATH.
+- C++: con [MSYS2 UCRT64](https://www.msys2.org/), instalar GCC mediante `pacman -S mingw-w64-ucrt-x86_64-gcc` y añadir `C:\msys64\ucrt64\bin` al PATH. Como alternativa, usar las herramientas C++ de Visual Studio.
+- Haskell: instalar GHC con la [guía de GHCup para Windows](https://www.haskell.org/ghcup/install/).
+- Prolog: instalar [SWI-Prolog](https://www.swi-prolog.org/download/stable) y marcar la opción para añadirlo al PATH.
 
-Abrir una terminal nueva después de configurar el PATH. Todos los comandos siguientes se ejecutan desde la raíz del repositorio en PowerShell.
+Abrir una terminal nueva después de configurar el PATH y comprobar con `g++ --version`, `ghc --version` y `swipl --version`. **Todos los comandos siguientes se ejecutan desde la raíz del repositorio.**
 
-## Compilar y ejecutar C++
+## C++
 
-Con GCC:
+Compilar con GCC:
 
 ```powershell
 New-Item -ItemType Directory -Force build | Out-Null
 g++ -std=c++17 -Wall -Wextra -pedantic cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/horarios.cpp cpp/valentino.cpp cpp/diego.cpp -o build/planificador.exe
 .\build\planificador.exe
 ```
+
+Si el ejecutable se abre fuera de una terminal con `C:\msys64\ucrt64\bin` en el PATH y aparece un error de DLL, añadir `-static` al comando.
 
 Con MSVC, desde Developer PowerShell for Visual Studio:
 
@@ -67,225 +89,142 @@ cl /nologo /std:c++17 /EHsc /W4 cpp/main.cpp cpp/carlos.cpp cpp/nicolas.cpp cpp/
 .\build\planificador.exe
 ```
 
-## Usar el menu de Carlos
+Al iniciar, el programa muestra lo que cargó, por ejemplo: `Datos cargados: 10 puntos, 14 conexiones, 4 cisternas y 9 pedidos.` y `Stock cargado para P01.`
 
-| Opcion principal | Funcion |
+| Opción | Función |
 | --- | --- |
-| 1 | Registrar puntos, conexiones, cisternas y pedidos mediante un submenu. |
-| 2 | Cerrar o habilitar conexiones, asignar y entregar pedidos con control de agua, y consultar necesidad de recargas. |
-| 3 | Submenu de Diego: consultas, reporte general, alturas de cisternas y limites de vias. |
-| 4 | Iniciar stock de una planta registrada, consultar agua libre y reponer agua. |
-| 5 | Registrar y consultar horarios de recepcion (adicional de Nicolas Kou). |
-| 0 | Salir. En los submenus, volver al menu principal. |
+| 1 | Registrar puntos, conexiones, cisternas y pedidos, con validaciones. |
+| 2 | Cerrar o habilitar conexiones, asignar y entregar pedidos con control de agua, y consultar si un pedido necesita plan de recarga. |
+| 3 | Consultar puntos, conexiones y pedidos, ver el reporte general, registrar alturas y límites de altura, y consultar si una cisterna pasa por una vía. |
+| 4 | Consultar el agua libre de una planta, reponer agua o iniciar el stock de una planta sin stock. |
+| 5 | Registrar y consultar horarios de recepción. |
+| 0 | Salir. En los submenús, volver al menú principal. |
 
-La entrada usa `cin >>`: escribir cada campo sin espacios, por ejemplo `Planta_Chillon`, y los decimales con punto. El programa indica el orden de los campos. Las cisternas nuevas empiezan disponibles y los pedidos pendientes sin unidad; los errores de validacion se muestran y permiten seguir en el menu.
+La entrada usa `cin >>`: cada campo se escribe sin espacios (por ejemplo `Planta_Chillon`) y los decimales con punto. Los errores de validación se muestran y el menú continúa; una operación rechazada no modifica los datos. Si una lectura numérica falla o se termina la entrada, el programa termina con código 1 sin guardar.
 
-Si una extraccion numerica falla o se termina la entrada, el programa avisa y termina con codigo 1, sin guardar. La salida con `0` devuelve codigo 0. La recuperacion de entradas numericas mal formadas queda pendiente; no se ha añadido un analizador de texto.
+La asignación reserva el agua del pedido en su planta y ocupa la cisterna; la entrega descuenta el stock, libera la reserva y deja disponible la cisterna. Al iniciar, el stock se carga de `stock_agua.csv` y se reconstruyen las reservas de los pedidos asignados; si no coinciden con `litros_reservados`, el programa avisa y esa planta queda sin iniciar.
 
-Hay espacio de trabajo para 100 puntos, conexiones, cisternas, pedidos, alturas y restricciones, y control de agua de 10 plantas con hasta 100 reservas por planta. Son capacidades de los arreglos de esta sesion, no nuevos limites de los CSV. El control de stock solo se puede iniciar una vez por planta y empieza sin reservas porque esta sesion aun no carga pedidos asignados. La integracion futura debe cargar el stock y preparar sus reservas, sin reemplazarlos con un inicio nuevo.
+Ejemplos con los datos iniciales (opción 2):
 
-Para asignar un pedido desde la opcion 2, primero inicia el stock de su planta de origen en la opcion 4. La asignacion reserva agua y ocupa la cisterna; la entrega descuenta el stock, libera la reserva y deja disponible la cisterna. Una operacion rechazada conserva los datos. Las reservas y entregas no se ejecutan por separado. El submenu de Diego comparte los registros y estados; sus alturas y restricciones se conservan al volver al menu principal, hasta salir del programa.
+| Entrada | Resultado |
+| --- | --- |
+| Asignar `D002 U01` | Pedido asignado, agua reservada y cisterna ocupada. |
+| Asignar `D004 U03` | Rechazado: 18000 litros superan los 15000 de U03. |
+| Entregar `D003` | Pedido entregado, agua descontada y cisterna U02 libre. |
+| Consultar recarga `D004 U02` | 18000 L contra 7000 L: requiere recargas (el plan se calcula en Haskell). |
 
-Para probar la asignacion y entrega completas despues de compilar:
-
-```powershell
-Get-Content -LiteralPath tests/datos_menu/estados_agua.txt | .\build\planificador.exe
-```
-
-Se inicia un stock de 12000 litros y se asigna un pedido de 6000: quedan 6000 reservados y 6000 libres, sin reducir el stock. Al entregar quedan 6000 de stock y cero reservados; al reponer 5000 quedan 11000 libres. La opcion 3 permite ver el pedido asignado y luego entregado, con la cisterna disponible al final.
-
-Para probar la opcion 3, registra primero los puntos, una conexion, una cisterna y un pedido desde la opcion 1. Luego entra a 3: las opciones 1 a 5 consultan esos datos y muestran el reporte; 6 registra la altura de una cisterna, 7 el limite de una conexion y 8 compara ambas alturas. Usa 0 para volver al menu principal.
-
-Tambien puedes repetir ese recorrido automaticamente:
+## Haskell
 
 ```powershell
-Get-Content -LiteralPath tests/datos_menu/consultas_diego.txt | .\build\planificador.exe
+runghc -ihaskell haskell/Main.hs
 ```
 
-Debe mostrar 2 puntos, 1 conexion, 1 cisterna y 1 pedido pendiente de 6000 litros. La cisterna de 3.5 metros no pasa por el limite de 3.2 metros; al volver a entrar al submenu, la misma restriccion se conserva y se aplica en el sentido inverso. La integracion se comprobo con 6 escenarios de consola, incluidos duplicados, entrada invalida y el recorrido anterior de agua.
-
-Para repetir un ejemplo completo despues de compilar:
+También se puede compilar una vez y ejecutar sin volver a compilar:
 
 ```powershell
-Get-Content -LiteralPath tests/datos_menu/recorrido.txt | .\build\planificador.exe
+ghc -ihaskell -outputdir build haskell/Main.hs -o build/planificador_hs.exe
+.\build\planificador_hs.exe
 ```
 
-Registra dos puntos, una conexion, una cisterna y un pedido; inicia 12000 litros para la planta y repone 5000 con un tope de prueba de 20000. Debe mostrar 17000 litros libres al final y salir normalmente. No lee ni modifica los CSV. Se comprobaron 10 escenarios de consola con el ejecutable MSVC, incluidos errores y limites de los arreglos.
+Al compilar aparecen dos avisos sobre `head` y `tail` en `Nicolas.hs`; no afectan el funcionamiento.
 
-## Probar los registros de Carlos
+| Opción | Función | Ejemplo con los datos iniciales |
+| --- | --- | --- |
+| 1 | Vecinos de un punto (4.2.3) | `P03` → P06, P07, P04, P05 |
+| 2 | Rutas posibles y su costo (4.2.4 y 4.2.5) | `P01` a `P05` → 12 rutas; la más corta, 11.50 km |
+| 3 | Reporte de pedidos (4.2.6) | Pedidos por estado, carga por cisterna y pendientes por prioridad |
+| 4 | Entregas dentro del horario (adicional de Nicolás) | `D001` saliendo a las `07:00` → llegada, espera y fin de descarga por ruta |
+| 5 | Plan de recarga (adicional de Valentino) | `D004` con `U02` → 3 viajes (7000, 7000 y 4000 L), 25.00 km, S/ 75.00 |
+| 6 | Resumen general (4.2.7) | Ruta más corta y costo de cada pedido pendiente |
+| 0 | Salir | |
 
-Con GCC:
+## Prolog
+
+```powershell
+swipl -q -s prolog/main.pl
+```
+
+Los códigos van entre comillas simples porque empiezan con mayúscula; sin comillas, Prolog los tomaría como variables. Cada consulta termina en punto. Si una consulta muestra una respuesta y espera, `;` muestra la siguiente y Enter termina. Para salir: `halt.`
+
+Ejemplos con los datos iniciales:
+
+```prolog
+?- conectado('P01', 'P06', D).
+% 4.3.2 (Nicolás). D = 4.0
+
+?- alcanzable('P01', 'P06').
+% 4.3.3 (Valentino). true
+
+?- alcanzable('P01', 'P10').
+% false: la única vía a P10 está cerrada.
+
+?- ruta_evitando('P01', 'P09', 'P07', Ruta).
+% 4.3.4 (Diego). Ruta = ['P01', 'P08', 'P09']
+
+?- puede_atender('U01', 'D001').
+% 4.3.5 (Carlos). true
+
+?- puede_atender('U02', 'D001').
+% false: U02 está ocupada.
+
+?- pedidos_inaccesibles(P).
+% 4.3.6 (Valentino). P = ['D006']
+
+?- ruta_compatible('U01', 'P01', 'P03', Ruta).
+% Adicional de Diego. Ruta = ['P01', 'P06', 'P03']
+
+?- ruta_compatible('U03', 'P01', 'P03', Ruta).
+% false: U03 (3.8 m) no pasa por ninguna vía hacia P03.
+
+?- cisternas_compatibles(['P01', 'P06', 'P03'], Unidades).
+% Unidades = ['U01', 'U02', 'U04']
+
+?- restriccion_que_impide('U03', ['P01', 'P06', 'P03'], A, B, Max).
+% A = 'P06', B = 'P03', Max = 3.6
+```
+
+Cada regla tiene una versión que lee los CSV en cada consulta (por ejemplo `alcanzable/2`) y otra que recibe las listas ya leídas (`alcanzable/3`). No se usa una base de hechos dinámica: las listas contienen términos `punto`, `conexion`, `unidad` y `pedido`, que las reglas recorren con `member`.
+
+## Prueba de integración
+
+Comprueba que un cambio hecho en C++ lo leen Haskell y Prolog. Partir de los datos iniciales.
+
+1. En C++, opción 2 → 1: cerrar `P01 P08 cerrada` y luego `P07 P09 cerrada`. Salir con 0 para guardar.
+2. En Prolog: `pedidos_inaccesibles(P).` ahora da `P = ['D004', 'D006']`, y `alcanzable('P01', 'P08').` da `false`, porque P08 quedó aislado.
+3. En Haskell, opción 5 con `D004` y `U02`: "No hay ruta habilitada entre la planta y el destino".
+
+## Pruebas automáticas de Carlos
+
+Estas pruebas usan datos aislados en memoria y no leen ni modifican los CSV. Crear antes la carpeta `build/`.
+
+Registros:
 
 ```powershell
 g++ -std=c++17 -Wall -Wextra -pedantic tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp -o build/pruebas_registro.exe
 .\build\pruebas_registro.exe
 ```
 
-Alternativa MSVC:
-
-```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/registro_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp /Fo:build\ /Fe:build\pruebas_registro.exe
-.\build\pruebas_registro.exe
-```
-
-Crear primero `build/` con el comando anterior. Resultado esperado: `51 pruebas, 0 fallos.` Las pruebas usan datos aislados en memoria y no modifican los CSV.
-
-Para llamar a las funciones desde otro `.cpp`, incluir `tipos.h` y luego `carlos.h`, una sola vez cada uno. Por ejemplo:
-
-```cpp
-#include "tipos.h"
-#include "carlos.h"
-
-// Dentro de una funcion:
-Punto puntos[10];
-int cantidadPuntos = 0;
-Punto planta = {"P01", "Planta Chillon", TipoPunto::planta, "carabayllo"};
-std::string error = registrarPunto(planta, puntos, &cantidadPuntos, 10);
-```
-
-Si `error == ""`, se agregó el registro y aumentó el contador. Si hay un error, devuelve su explicación sin modificar los datos. El llamador debe proporcionar la capacidad real del arreglo. Las unidades nuevas se registran disponibles y los pedidos pendientes sin unidad; asignar o entregar corresponde a la gestión de estados. La carga de registros históricos desde CSV es una operación distinta.
-
-Las funciones de registro reciben textos y numeros ya preparados. El menu captura esos datos y llama a las mismas funciones probadas. La validacion completa de los caracteres de cada campo CSV y del formato del texto numerico sigue pendiente; `cin >>` realiza la extraccion basica autorizada para esta etapa.
-
-## Stock y reservas de Carlos
-
-`StockAgua` conserva los tres campos de `stock_agua.csv`. `ReservaAgua` identifica el pedido, la planta y los litros; su marca `entregada` permite rechazar una segunda entrega. Este detalle se mantiene en un arreglo en memoria, sin agregar otro CSV. Se utiliza un arreglo separado por planta y las entregadas se conservan durante la sesion.
-
-| Funcion | Uso |
-| --- | --- |
-| `consultarAguaLibre(stock, &libres)` | Devuelve stock menos reservas; valida primero el saldo. |
-| `prepararReservasIniciales(stock, pedidos, cantidadPedidos, reservas, &cantidad, capacidad)` | Prepara las reservas de pedidos asignados al iniciar; rechaza diferencias con el total del stock sin corregir cifras. El arreglo debe estar vacio. |
-| `reservarAgua(pedido, &stock, reservas, &cantidad, capacidad)` | Reserva un pedido pendiente sin unidad, si hay litros libres y espacio; impide duplicados. |
-| `registrarEntregaAgua(pedido, &stock, reservas, cantidad)` | Descuenta el volumen reservado de un pedido asignado y libera su reserva una sola vez. |
-| `reponerAgua(&stock, litrosRecibidos, topeStock)` | Agrega litros positivos sin superar el tope indicado por el llamador. |
-
-El resultado sigue siendo `""` en caso de exito o un mensaje de error. Antes de una reserva o entrega, la suma de las reservas activas debe coincidir con `litros_reservados`. Si hay un rechazo, no se modifican el saldo, las reservas ni su contador. El llamador debe indicar las cantidades y capacidades reales de sus arreglos.
-
-La opcion 2 llama a `asignarPedidoConAgua` y `entregarPedidoConAgua`, declaradas en `carlos.h`. Ambas reutilizan las validaciones y cambios de estado de Valentino. Primero preparan los estados en copias del pedido y la cisterna; despues operan sobre el agua y, solo si sale bien, aplican las copias. Asi un rechazo no deja estados cambiados sin su reserva o descuento. Las funciones originales de Valentino se conservan; su submenu independiente no se usa en el flujo integrado porque no recibe el stock. Nicolas conectara despues la carga y el guardado de todos los datos relacionados; no guardar cambios intermedios.
-
-El contrato no fija capacidad maxima para la planta. `topeStock` es un limite de trabajo recibido como parametro, no una nueva columna ni una cifra impuesta a los datos. Comprobar `litrosRecibidos <= topeStock - stockActual` antes de sumar evita el desbordamiento usando operaciones basicas. El tope debe ser representable como `int` y no menor que el stock actual.
-
-Con GCC, despues de crear `build/`:
+Stock y reservas:
 
 ```powershell
 g++ -std=c++17 -Wall -Wextra -pedantic tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp -o build/pruebas_stock.exe
 .\build\pruebas_stock.exe
 ```
 
-Alternativa MSVC:
-
-```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/stock_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp /Fo:build\ /Fe:build\pruebas_stock.exe
-.\build\pruebas_stock.exe
-```
-
-Resultado obtenido con MSVC: `80 pruebas de stock, 0 fallos.` Se usan estados aislados en memoria; no se escriben archivos.
-
-Para comprobar la integracion entre estados y agua con GCC:
+Estados y agua:
 
 ```powershell
 g++ -std=c++17 -Wall -Wextra -pedantic tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp -o build/pruebas_estados_agua.exe
 .\build\pruebas_estados_agua.exe
 ```
 
-Alternativa MSVC:
+Con MSVC, reemplazar `g++ ... -o build/X.exe` por `cl /nologo /std:c++17 /EHsc /W4 ... /Fo:build\ /Fe:build\X.exe`.
 
-```powershell
-cl /nologo /std:c++17 /EHsc /W4 tests/estados_agua_carlos.cpp cpp/carlos.cpp cpp/diego.cpp cpp/valentino.cpp cpp/nicolas.cpp cpp/horarios.cpp /Fo:build\ /Fe:build\pruebas_estados_agua.exe
-.\build\pruebas_estados_agua.exe
-```
-
-Resultado obtenido con MSVC: `26 pruebas de estados y agua, 0 fallos.` Comprueban rechazos sin cambios, capacidad y agua insuficientes, reservas, entregas, duplicados, reposicion y reutilizacion de la cisterna. Tambien se comprobaron 11 recorridos del menu, incluidos el de Diego, la falta de stock, dos plantas independientes, cambios de conexiones, consulta de recargas y fin de entrada. El programa y las tres pruebas C++ compilaron con `/W4 /WX`, sin advertencias.
-
-**Dato pendiente de reconciliar:** el CSV actual tiene 12000 litros de stock y 4000 reservados, pero los pedidos asignados D003 y D005 suman 12000. La preparacion inicial rechaza esta diferencia. Si las asignaciones reflejan la realidad, el total reservado tendria que coincidir con sus 12000 litros; si los 4000 son correctos, deben revisarse los pedidos. El equipo debe confirmar la fuente correcta: no se modificaron los CSV automaticamente.
-
-## Ejecutar Haskell
-
-```powershell
-runghc -ihaskell haskell/Main.hs
-```
-
-Debe mostrar el mensaje de inicio. No se ha podido compilar ni ejecutar Haskell en el entorno de trabajo actual porque no se encontró GHC.
-
-## Cargar Prolog
-
-```powershell
-swipl -q -s prolog/main.pl
-```
-
-Para salir del intérprete, escribir `halt.`. Para cargar y salir directamente:
-
-```powershell
-swipl -q -s prolog/main.pl -g halt
-```
-
-Preparar primero los CSV en `data/runtime/` con el comando de la ultima seccion. Luego se pueden ejecutar estas consultas:
-
-```prolog
-?- leer_datos(Puntos, Conexiones, Unidades, Pedidos).
-% Devuelve cuatro listas de registros, sin las cabeceras.
-
-?- puede_atender('U01', 'D001').
-% Esperado con las copias de los ejemplos: true.
-
-?- puede_atender('U02', 'D001').
-% Esperado: false, porque U02 esta ocupada.
-
-?- puede_atender('U01', 'D004').
-% Esperado: false, porque D004 pide 18000 litros y U01 tiene capacidad de 10000.
-```
-
-Los codigos en mayusculas se escriben entre comillas simples para que Prolog los trate como atomos y no como variables. La consulta de dos argumentos lee los archivos en cada llamada y reutiliza `puede_atender(CodigoUnidad, CodigoPedido, Unidades, Pedidos)`. Esta regla exige disponibilidad y capacidad suficiente, incluida la igualdad; no asigna pedidos ni modifica datos.
-
-Los terminos `unidad` y `pedido` conservan el orden de los campos CSV, indicado en los comentarios de `carlos.pl`. Para probar con los datos aislados del archivo de pruebas, abrir:
-
-```powershell
-swipl -q -s tests/atencion_carlos.pl
-```
-
-Luego ejecutar en el interprete:
-
-```prolog
-?- pruebas_atencion.
-% Esperado: true.
-
-?- datos_atencion(Unidades, Pedidos), puede_atender(grande, normal, Unidades, Pedidos).
-% Esperado: true; capacidad suficiente.
-
-?- datos_atencion(Unidades, Pedidos), puede_atender(justa, normal, Unidades, Pedidos).
-% Esperado: true; capacidad exactamente igual.
-
-?- datos_atencion(Unidades, Pedidos), puede_atender(pequena, normal, Unidades, Pedidos).
-% Esperado: false; capacidad insuficiente.
-
-?- datos_atencion(Unidades, Pedidos), puede_atender(ocupada, normal, Unidades, Pedidos).
-% Esperado: false; unidad ocupada.
-```
-
-Si el interprete pide elegir otra solucion, pulsar Enter para terminar esa consulta. La prueba completa tambien comprueba pedidos demasiado grandes, codigos inexistentes y listas vacias. Para ejecutarla sin interaccion:
+Prolog:
 
 ```powershell
 swipl -q -s tests/atencion_carlos.pl -g pruebas_atencion -t halt
-```
-
-Para probar la lectura de los cuatro archivos de ejemplo, los codigos, los numeros, los campos vacios y las cabeceras:
-
-```powershell
 swipl -q -s tests/lectura_carlos.pl -g pruebas_lectura -t halt
 ```
 
-La lectura usa [library(csv), incluida en SWI-Prolog](https://www.swi-prolog.org/pldoc/man?section=csv), autorizada por el equipo. Comprueba las cabeceras y la cantidad de columnas; convierte los numeros y conserva los codigos. Una cabecera incorrecta hace fallar la lectura. Un archivo ausente o una fila con columnas incorrectas produce un error del lector. La validacion completa de registros corresponde al registro en C++; estos lectores no repiten esas validaciones ni reparan datos.
-
-No se usa una base de hechos dinamica: las listas contienen terminos `punto`, `conexion`, `unidad` y `pedido`, que las reglas pueden consultar con `member`. No se ha podido ejecutar Prolog en el entorno de trabajo porque no se encontro SWI-Prolog: los resultados anteriores son los esperados, no resultados medidos.
-
-## CSV de prueba y ejecución
-
-Los cuatro archivos base son `puntos.csv`, `conexiones.csv`, `unidades.csv` y `pedidos.csv`. Los adicionales son `stock_agua.csv`, `horarios_recepcion.csv`, `dimensiones_cisternas.csv` y `restricciones_altura.csv`. Sus cabeceras actuales definen los nombres que utilizará el código. Los datos base incluyen 10 puntos, 14 conexiones, 4 cisternas y 9 pedidos.
-
-Para crear las copias locales iniciales:
-
-```powershell
-Copy-Item -LiteralPath (Get-ChildItem -LiteralPath data/examples -Filter *.csv).FullName -Destination data/runtime
-```
-
-El comando reemplaza las copias locales existentes. No usarlo si se necesitan conservar esos datos. En el flujo integrado, C++ escribira en `data/runtime/` y Haskell y Prolog leeran despues de cada guardado completo. Prolog ya puede leer esas copias; la persistencia C++ y la lectura Haskell siguen pendientes.
+Los archivos de `tests/datos_menu/` son recorridos del menú creados cuando C++ todavía empezaba sin datos. Ahora el programa carga los CSV al iniciar y guarda en `data/runtime/`, así que sus resultados ya no coinciden con los descritos originalmente.
